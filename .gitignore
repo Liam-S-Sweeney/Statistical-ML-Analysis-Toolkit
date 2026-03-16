@@ -1,0 +1,22 @@
+# --- Python ---
+__pycache__/
+*.pyc
+
+# --- Virtual env ---
+.venv/
+venv/
+
+# --- Data (raw + exported) ---
+*.csv
+data_files/
+
+# --- Generated outputs ---
+multivariate_analysis/
+single_var_descriptives/
+outputs/
+
+# --- OS / IDE ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
