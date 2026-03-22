@@ -1,4 +1,4 @@
-# CSV Analyzer GUI
+# Statistical ML Analysis Toolkit
 
 A desktop data analysis tool built with Python and Tkinter for exploratory analysis, visualization, and unsupervised machine learning on CSV datasets. Designed for clinical and behavioral research data.
 
@@ -6,30 +6,30 @@ A desktop data analysis tool built with Python and Tkinter for exploratory analy
 
 ## Features
 
-- **Descriptive Statistics** — Generates per-variable and master summary CSVs covering central tendency, variability, distribution shape, and frequency
-- **Multivariate Exploration** — Per-variable distribution visualizations including probability plots, histograms with normal fit, boxplots, violin plots, and swarm plots
-- **Multivariate Visualization** — PairGrid plots with scatter, KDE, and histogram layers; hue and size encoding via configurable columns
+- **Descriptive Statistics** — Generates per-variable and master summary CSVs covering central tendency, variability, distribution shape, and frequency counts
+- **Multivariate Exploration** — Per-variable 5-panel visualizations: probability plot, histogram with normal fit, boxplot, violin plot, and swarm plot
+- **Multivariate Visualization** — PairGrid with histograms on the diagonal, scatter plots on the lower triangle, and KDE on the upper triangle; optional hue and size encoding via configurable columns
 - **Correlational Analysis** — Pearson correlation heatmap and regression pairplot across selected variables
-- **GMM Analysis** — Full Gaussian Mixture Model pipeline including data cleaning, PCA dimensionality reduction, BIC/AIC model selection across covariance types, cluster evaluation, and CSV export
+- **GMM Analysis** — Full unsupervised ML pipeline: zero-imputation, z-score standardization, LDA sanity check, PCA dimensionality reduction, BIC/AIC model selection across 4 covariance types and K = 1–10, cluster evaluation (NMI, ARI), and CSV export
 
 ---
 
 ## Project Structure
 
 ```
-CSV-Analyzer-GUI/
+Statistical-ML-Analysis-Toolkit/
 │
 ├── main_gui.py                      # Tkinter GUI — entry point
 ├── config.py                        # All configurable parameters
-├── data_loader.py                   # CSV loading and cleaning
+├── data_loader.py                   # CSV loading and missing-code cleaning
 ├── cdfs.py                          # Descriptive statistics engine
 ├── global_descriptive_generator.py  # Master and per-variable CSV generators
-├── multivariate_exploration.py      # Exploration, visualization, correlation
+├── multivariate_exploration.py      # Exploration, visualization, and correlation
 ├── gmm_analysis.py                  # GMM pipeline
 │
 ├── data_files/                      # Place your dataset here
 │   └── your_dataset.csv
-├── single_var_descriptives/         # Auto-generated per-variable CSVs
+├── single_var_descriptives/         # Auto-generated per-variable descriptive CSVs
 ├── multivariate_analysis/           # Auto-generated multivariate output CSVs
 └── requirements.txt
 ```
@@ -41,8 +41,8 @@ CSV-Analyzer-GUI/
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/Liam-S-Sweeney/CSV-Analyzer-GUI.git
-cd CSV-Analyzer-GUI
+git clone https://github.com/Liam-S-Sweeney/Statistical-ML-Analysis-Toolkit.git
+cd Statistical-ML-Analysis-Toolkit
 ```
 
 ### 2. Create and Activate a Virtual Environment
@@ -78,20 +78,24 @@ DATA_PATH = DATA_DIR / "your_dataset.csv"
 python main_gui.py
 ```
 
+> **Note:** If the `data_files/` folder or CSV is missing on startup, the application will print a warning and exit. Ensure the dataset is in place before launching.
+
 ---
 
 ## Configuration (`config.py`)
 
-All key parameters are set in `config.py` — update this file when switching datasets.
+All key parameters live in `config.py`. Update this file whenever you switch datasets.
 
 | Parameter | Description |
 |---|---|
 | `DATA_PATH` | Path to your CSV file inside `data_files/` |
-| `DX` | Column name for your diagnosis / outcome variable |
-| `IMPOSSIBLE_ZERO_VARS` | Columns where a value of 0 is physiologically impossible (e.g. Glucose, BMI) — zeros are replaced with NaN before GMM analysis |
-| `MISSING_CODES` | Numeric codes used to represent missing data (e.g. `-99`, `-999`) — replaced with NaN on load |
-| `HUE_COL` / `SIZE_COL` | Columns used for color and size encoding in PairGrid visualizations |
+| `DX` | Column name for your diagnosis / outcome variable (used by GMM for evaluation) |
+| `IMPOSSIBLE_ZERO_VARS` | Columns where a zero is physiologically impossible — zeros are replaced with NaN before GMM analysis |
+| `MISSING_CODES` | Numeric codes representing missing data (e.g. `-99`, `-999`) — replaced with NaN on load |
+| `HUE_COL` / `SIZE_COL` | Columns used for color and size encoding in PairGrid visualizations — set to `None` or a non-existent column to disable |
 | `PALETTE` | Seaborn palette name for visualizations |
+
+> **Important:** `IMPOSSIBLE_ZERO_VARS`, `HUE_COL`, `SIZE_COL`, and `DX` are all dataset-specific. The defaults are configured for the bundled Pima Indians Diabetes Dataset — review and update all of these when switching to a new dataset.
 
 ---
 
@@ -99,27 +103,27 @@ All key parameters are set in `config.py` — update this file when switching da
 
 ### Selecting Variables
 
-Use the spinbox at the top of the GUI to set the number of variables, then use the searchable dropdowns to select columns from your dataset. Dropdowns filter as you type.
+Use the spinbox at the top of the GUI to set the number of variables (1–10), then use the searchable dropdowns to select columns from your dataset. Dropdowns filter as you type.
 
 ### Available Analyses
 
-**Multivariate Exploration**
-Requires 1+ variables. Generates a descriptive statistics CSV and produces a 5-panel visualization for each selected variable: probability plot, histogram with normal fit, boxplot, violin plot, and swarm plot.
+**Multivariate Exploration** *(1+ variables)*
+Exports a descriptive statistics CSV to `multivariate_analysis/` and produces a 5-panel visualization for each selected variable: probability plot, histogram with normal fit, boxplot, violin plot, and swarm plot.
 
-**Multivariate Visualization**
-Requires 2+ variables. Produces a PairGrid with histograms on the diagonal, scatter plots on the lower triangle, and KDE on the upper triangle. Encodes a grouping variable via hue and size if configured.
+**Multivariate Visualization** *(2+ variables)*
+Produces a PairGrid with histograms on the diagonal, scatter plots on the lower triangle, and KDE on the upper triangle. Optionally encodes a grouping variable via hue and size if `HUE_COL` / `SIZE_COL` are configured and present in the dataset.
 
-**Multivariate Correlation**
-Requires 2+ variables. Produces a Pearson correlation heatmap and a regression pairplot across selected variables.
+**Multivariate Correlation** *(2+ variables)*
+Produces a Pearson correlation heatmap and a regression pairplot across selected variables.
 
-**GMM Analysis**
-Requires 2+ variables. Runs the full pipeline described below and exports results to `multivariate_analysis/`.
+**GMM Analysis** *(2+ variables)*
+Runs the full unsupervised ML pipeline described below and exports results to `multivariate_analysis/`.
 
-**Master Descriptive CSV Generator**
-No variable selection needed. Computes descriptive statistics for every column in the dataset and saves to `data_files/master_descriptives.csv`.
+**Master Descriptive CSV Generator** *(no variable selection needed)*
+Computes descriptive statistics for every column in the dataset and saves to `data_files/master_descriptives.csv`.
 
-**All Single Var Descriptive CSV Generator**
-No variable selection needed. Saves one descriptive CSV per variable to `single_var_descriptives/`. Warns before overwriting existing files.
+**All Single Var Descriptive CSV Generator** *(no variable selection needed)*
+Saves one descriptive CSV per variable to `single_var_descriptives/`. Prompts before overwriting existing files.
 
 ---
 
@@ -128,22 +132,22 @@ No variable selection needed. Saves one descriptive CSV per variable to `single_
 The GMM analysis runs automatically in sequence when triggered from the GUI.
 
 ### 1. Data Cleaning
-Columns listed in `IMPOSSIBLE_ZERO_VARS` are checked for zero values. Any column with zeros is cleaned by replacing them with NaN. Rows with remaining NaN values are dropped. The resulting sample size is printed.
+Rows with NaN values across selected columns are dropped. Columns listed in `IMPOSSIBLE_ZERO_VARS` are additionally checked for zeros — any column with zero values has those zeros replaced with NaN before the row-drop step. The resulting sample size is printed to the console.
 
 ### 2. Standardization
-All selected features are z-scored (mean=0, std=1) using `StandardScaler`. This ensures no single feature dominates covariance estimation due to scale differences.
+All selected features are z-scored (mean = 0, std = 1) using `StandardScaler`. This ensures no single feature dominates covariance estimation due to scale differences.
 
 ### 3. LDA Sanity Check
-A supervised Linear Discriminant Analysis is cross-validated (5-fold) against the outcome column (`DX`). This establishes whether the selected features can linearly separate diagnostic groups at all — setting an upper bound on what GMM can recover unsupervised.
+A supervised Linear Discriminant Analysis is 5-fold cross-validated against the outcome column (`DX`). This establishes an upper bound on what GMM can recover unsupervised — if LDA accuracy is near chance, the selected features do not separate the diagnostic groups linearly.
 
 ### 4. PCA
-Full PCA is fit to determine the number of components needed to explain ≥95% of variance (`optimal_n`). A reduced PCA is then fit with `optimal_n` components. All downstream GMM fitting and prediction uses the PCA-transformed data.
+Full PCA is fit to determine how many components are needed to explain ≥ 95% of variance (`optimal_n`). A reduced PCA is then fit with `optimal_n` components. All downstream GMM fitting uses PCA-transformed data. A cumulative explained variance plot and a PairGrid of the PCA space are displayed.
 
 ### 5. Model Selection (BIC/AIC)
-GMMs are fit for K = 1 to 10 across all four covariance types (`full`, `tied`, `diag`, `spherical`) — 40 models total. BIC and AIC are recorded for each. The model with the lowest BIC is selected. All models within one standard deviation of the BIC minimum are reported as statistically acceptable alternatives.
+GMMs are fit for K = 1 to 10 across all four covariance types (`full`, `tied`, `diag`, `spherical`) — 40 models total. BIC and AIC are recorded for each. The model with the lowest BIC is selected as best. All models within one standard deviation of the BIC minimum are reported as statistically acceptable alternatives.
 
 ### 6. Cluster Assignment
-The best model assigns each subject a cluster label (hard) and per-cluster probability (soft). Probabilities are written back to the main dataframe.
+The best model assigns each subject a cluster label (hard assignment via `predict`) and per-cluster membership probabilities (soft assignment via `predict_proba`). Probabilities are written back to the main dataframe.
 
 ### 7. Evaluation
 - **Crosstab** — Row-normalized cross-tabulation of diagnosis × cluster, displayed as a heatmap
@@ -156,24 +160,25 @@ Results are saved to `multivariate_analysis/ml_<variables>-gmm_analysis.csv` con
 | Field | Description |
 |---|---|
 | LDA CV accuracy | Mean ± std from 5-fold LDA cross-validation |
-| Optimal Components | Number of PCA components retained |
-| Acceptable Combinations | All (covariance type, K) pairs within 1 std of minimum BIC |
-| Best Covariance / Best K | Selected model configuration |
+| Optimal Number of Components | Number of PCA components retained (≥ 95% variance) |
+| Acceptable (cov, K) Combinations | All model configurations within 1 std of minimum BIC |
+| Best covariance / Best K | Selected model configuration |
 | Cluster Counts / Proportions | Size of each cluster |
-| NMI / ARI | Cluster-diagnosis alignment metrics |
+| NMI / ARI | Cluster–diagnosis alignment metrics |
 | DX Length / Non-null / Unique | Outcome variable diagnostics |
+| TEST \| New Pt Cluster / Probability | Cluster assignment for a randomly sampled held-out subject (demonstration only) |
 
 ---
 
 ## Interpreting GMM Results
 
-**ARI and NMI near 0** — Clusters do not align with diagnostic labels. This may mean the classes are interleaved in feature space (not a failure of the code — GMM finds density modes, not label boundaries). Confirm with LDA accuracy: if LDA is high but ARI is near 0, the features are linearly separable supervised but do not form distinct density clusters.
+**ARI and NMI near 0** — Clusters do not align with diagnostic labels. GMM finds density modes, not label boundaries — this may not be a failure of the method. Cross-reference with LDA accuracy: if LDA is high but ARI is near 0, the features are linearly separable under supervision but do not form distinct density clusters.
 
-**ARI > 0.2** — Moderate alignment. Clusters partially correspond to diagnosis, suggesting the diagnostic groups occupy somewhat distinct regions of feature space.
+**ARI > 0.2** — Moderate alignment. Clusters partially correspond to diagnosis labels, suggesting the diagnostic groups occupy somewhat distinct regions of feature space.
 
 **Flat BIC curve / many acceptable models** — No strong cluster signal at any K. The data does not contain clearly separated subpopulations for the selected features.
 
-**K=1 selected** — All data forms a single density mode. GMM is not the right tool for this dataset and feature set.
+**K = 1 selected** — All data forms a single density mode. Consider selecting different features or examining whether the population is genuinely homogeneous.
 
 ---
 
@@ -198,8 +203,12 @@ pip install -r requirements.txt
 
 ---
 
-## Notes
+## Default Dataset
 
-- The tool is currently configured for the [Pima Indians Diabetes Dataset](https://raw.githubusercontent.com/plotly/datasets/master/diabetes.csv) by default. To use a different dataset, update `config.py`.
-- `IMPOSSIBLE_ZERO_VARS` is dataset-specific. Review and update it for any new dataset — zeros in columns like `BloodPressure` or `BMI` are missing data coded as zero in some clinical datasets, not true measurements.
-- Output directories (`data_files/`, `single_var_descriptives/`, `multivariate_analysis/`) are created automatically on first run if they do not exist.
+The tool ships pre-configured for the [Pima Indians Diabetes Dataset](https://raw.githubusercontent.com/plotly/datasets/master/diabetes.csv), located at `data_files/diabetes.csv`. To use a different dataset, update `config.py` — at minimum, set `DATA_PATH`, `DX`, and `IMPOSSIBLE_ZERO_VARS`. Also review `HUE_COL` and `SIZE_COL`, which default to `'status'` and will silently disable hue/size encoding if that column is not present.
+
+---
+
+## Output Directories
+
+`data_files/`, `single_var_descriptives/`, and `multivariate_analysis/` are created automatically on first run if they do not exist.
