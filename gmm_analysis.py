@@ -8,33 +8,17 @@ from sklearn.decomposition import PCA
 from sklearn.metrics import normalized_mutual_info_score, adjusted_rand_score
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.model_selection import cross_val_score
-from pathlib import Path
-from config import DX, IMPOSSIBLE_ZERO_VARS
+from impossible_var_cleaner import clean_impossible_var
+from config import DX, IMPOSSIBLE_ZERO_VARS, OUTPUT_PNGS_PATH, MULTIVARIATE_ANALYSIS_PATH
 from data_loader import load_clean
 
-def gmm_analysis(*cols,dx_col=DX, impossible_zero_vars = IMPOSSIBLE_ZERO_VARS):
+def gmm_analysis(*cols,dx_col=DX):
 
     # Initial load of csv
     clean_df = load_clean()
 
-###
-    # build df from selected cols - 
-    df = clean_df[list(cols)].dropna().copy()
-
-    impossible_zero_cols = [c for c in impossible_zero_vars if c in df.columns]
-
-    threshold = 0
-    skewed_val = 0
-
-    for col in impossible_zero_cols:
-        proportion = (df[col] == 0).mean()
-        if proportion > threshold:
-            print(f"{col}: {proportion:.1%} {skewed_val} detected — replacing with NaN")
-            df[col] = df[col].replace(0, np.nan)
-
-    df = df.dropna()
-    print(f"Final df shape after cleaning: {df.shape}")
-###
+    # build df from selected cols 
+    df = clean_impossible_var(clean_df, *cols)
 
     # Standardize data (z-score)
     X_df = df[list(cols)].astype(float)
@@ -72,6 +56,11 @@ def gmm_analysis(*cols,dx_col=DX, impossible_zero_vars = IMPOSSIBLE_ZERO_VARS):
     plt.ylabel('Cumulative Explained Variance')
     plt.grid(True)
     plt.tight_layout()
+
+    output_dir = OUTPUT_PNGS_PATH
+    cols_title = '-'.join(cols)
+    plt.savefig(output_dir / f"{cols_title}-CEV_PCA.png", dpi=300, bbox_inches='tight')
+
     plt.show()
 
     # Visual Representation of standardized data
@@ -80,6 +69,9 @@ def gmm_analysis(*cols,dx_col=DX, impossible_zero_vars = IMPOSSIBLE_ZERO_VARS):
         diag_kind='kde',
         )
     g.map_upper(sns.kdeplot)
+    output_dir = OUTPUT_PNGS_PATH
+    cols_title = '-'.join(cols)
+    plt.savefig(output_dir / f"{cols_title}-Pair_Plot.png", dpi=300, bbox_inches='tight')
     plt.show()
 
     # Model selection via BIC/AIC
@@ -135,6 +127,9 @@ def gmm_analysis(*cols,dx_col=DX, impossible_zero_vars = IMPOSSIBLE_ZERO_VARS):
         ax.legend()
 
     plt.tight_layout()
+    output_dir = OUTPUT_PNGS_PATH
+    cols_title = '-'.join(cols)
+    plt.savefig(output_dir / f"{cols_title}-BIC_AIC.png", dpi=300, bbox_inches='tight')
     plt.show()
 
     # Save clusters/probabilities from best_gmm
@@ -183,6 +178,10 @@ def gmm_analysis(*cols,dx_col=DX, impossible_zero_vars = IMPOSSIBLE_ZERO_VARS):
     plt.title("DX_GROUP vs GMM cluster (row-normalized)")
     plt.ylabel("DX_GROUP")
     plt.xlabel("GMM cluster")
+    output_dir = OUTPUT_PNGS_PATH
+    cols_title = '-'.join(cols)
+    plt.savefig(output_dir / f"{cols_title}-GMM_Heatmap.png", dpi=300, bbox_inches='tight')
+
     plt.show()
 
     # Quantify Alignment
@@ -213,12 +212,10 @@ def gmm_analysis(*cols,dx_col=DX, impossible_zero_vars = IMPOSSIBLE_ZERO_VARS):
         'DX Length': dx_length,
         'DX Non-null': dx_non_null,
         'DX Unique': dx_unique,
-        'TEST | New Pt Cluster': new_pt_cluster,
-        'TEST | New Pt Probability': new_pt_prob,
     }])
 
     # Output DF -> CSV
-    output_dir = Path('multivariate_analysis')
+    output_dir = MULTIVARIATE_ANALYSIS_PATH
     cols_title = '-'.join(cols)
     output_db.to_csv(output_dir / f"ml_{cols_title}-gmm_analysis.csv",index=False)
     

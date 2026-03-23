@@ -26,7 +26,7 @@ var_options = [var for var in df.columns]
 
 # Create window
 root = tk.Tk()
-root.title("IDD Lab Data Analysis Tool")
+root.title("Statistical + ML Analysis Tool")
 root.geometry('500x500')
 
 
