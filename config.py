@@ -4,6 +4,8 @@ DATA_DIR = Path("data_files")
 DATA_PATH = DATA_DIR / "diabetes.csv"
 SINGLE_VAR_DESCRIPTIVES_PATH = Path('single_var_descriptives')
 MULTIVARIATE_ANALYSIS_PATH = Path('multivariate_analysis')
+OUTPUT_PNGS_PATH = Path('output_pngs')
+
 MISSING_CODES = [-99, -999, -9999]
 IMPOSSIBLE_ZERO_VARS = [
     'Glucose', 

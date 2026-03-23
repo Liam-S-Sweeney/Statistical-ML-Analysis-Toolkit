@@ -5,17 +5,22 @@ import seaborn as sns
 import scipy.stats as stats
 from pathlib import Path
 from data_loader import load_clean
-from config import HUE_COL, SIZE_COL, PALETTE
+from config import HUE_COL, SIZE_COL, PALETTE, MULTIVARIATE_ANALYSIS_PATH, OUTPUT_PNGS_PATH
 from cdfs import compute_descriptives_for_series
+from impossible_var_cleaner import clean_impossible_var
 
 def explore_multi_variables(*cols, palette=PALETTE):
-    df = load_clean()
+    clean_df = load_clean()
+
+    # build df from selected cols 
+    df = clean_impossible_var(clean_df, *cols)
+
     descriptive_dict = [
         compute_descriptives_for_series(df[col], name=col, position=df.columns.get_loc(col))
         for col in cols
         ]
     
-    out_dir = Path('multivariate_analysis')
+    out_dir = MULTIVARIATE_ANALYSIS_PATH
     cols_title = '-'.join(cols)
     pd.DataFrame(descriptive_dict).to_csv(out_dir / f"{cols_title}-multivar_analysis.csv",index=False)
 
@@ -86,6 +91,10 @@ def explore_multi_variables(*cols, palette=PALETTE):
 
         plt.subplots_adjust(hspace=0.25)
         fig.suptitle(f"{col} Visualizations")
+
+        output_dir = OUTPUT_PNGS_PATH
+        plt.savefig(output_dir / f"{col}-Visualizations.png", dpi=300, bbox_inches='tight')
+
         plt.show()
     
 ############
@@ -93,12 +102,12 @@ def explore_multi_variables(*cols, palette=PALETTE):
 def multivariate_visualizations(*cols, hue_col=HUE_COL, size_col=SIZE_COL, palette=PALETTE):
 
     clean_df = load_clean() 
+
+    # build df from selected cols 
+    df = clean_impossible_var(clean_df, *cols)
     
     if len(cols) < 2:
         raise ValueError("Select at least two variables.")
-
-    # build df from selected cols
-    df = pd.DataFrame({col: clean_df[col].to_numpy(float) for col in cols})
 
     # add hue + size columns if they exist
     if hue_col in clean_df.columns:
@@ -126,6 +135,10 @@ def multivariate_visualizations(*cols, hue_col=HUE_COL, size_col=SIZE_COL, palet
     if hue_col:
         g.add_legend(title=hue_col)
 
+    output_dir = OUTPUT_PNGS_PATH
+    cols_title = '-'.join(cols)
+    plt.savefig(output_dir / f"{cols_title}-Multivar_Visualization.png", dpi=300, bbox_inches='tight')
+
     plt.show()
 
 #########
@@ -145,7 +158,10 @@ def correlational_analysis(*cols, hue_col=HUE_COL, palette=PALETTE):
     if missing:
         raise KeyError(f"Missing columns in dataset: {missing}")
 
-    df = clean_df[cols].copy()
+    clean_df_copy = clean_df[cols].copy()
+
+    # build df from selected cols 
+    df = clean_impossible_var(clean_df_copy, *cols)
 
     # attempt to add a palette
     try:
@@ -174,6 +190,10 @@ def correlational_analysis(*cols, hue_col=HUE_COL, palette=PALETTE):
         hue=hue_to_use,     
         kind="reg"
     )
+
+    output_dir = OUTPUT_PNGS_PATH
+    cols_title = '-'.join(cols)
+    plt.savefig(output_dir / f"{cols_title}-Correlational_Visualization.png", dpi=300, bbox_inches='tight')
 
     plt.show()
      

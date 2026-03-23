@@ -8,6 +8,7 @@ venv/
 
 # --- Data (raw + exported) ---
 *.csv
+*.png
 data_files/
 
 # --- Generated outputs ---
