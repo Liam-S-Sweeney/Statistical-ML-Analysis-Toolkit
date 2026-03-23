@@ -130,7 +130,7 @@ def multivariate_visualizations(*cols, hue_col=HUE_COL, size_col=SIZE_COL, palet
 
 #########
 
-def correlational_analysis(*cols, hue_col="CGender_4", palette=PALETTE):
+def correlational_analysis(*cols, hue_col=HUE_COL, palette=PALETTE):
 
     clean_df = load_clean() 
 
