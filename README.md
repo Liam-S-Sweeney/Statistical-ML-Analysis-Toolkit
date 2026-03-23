@@ -31,7 +31,7 @@ All outputs save automatically to disk as CSVs and 300 DPI PNGs.
 
 1. **Clean** — Drop NaN rows; replace physiologically impossible zeros with NaN for configurable columns
 2. **Standardize** — Z-score all features via `StandardScaler`
-3. **LDA sanity check** — 5-fold cross-validated LDA establishes a supervised upper bound before unsupervised clustering
+3. **LDA check** — 5-fold cross-validated LDA establishes a supervised upper bound before unsupervised clustering
 4. **PCA** — Reduce to components explaining ≥ 95% variance; fit all GMMs in PCA space
 5. **Model selection** — Fit 40 models (K = 1–10 × 4 covariance types); select best by BIC with 1-std acceptable range
 6. **Evaluate** — NMI and ARI against diagnosis labels; row-normalized crosstab heatmap
