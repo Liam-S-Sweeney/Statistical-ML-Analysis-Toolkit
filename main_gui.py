@@ -7,6 +7,7 @@ import os
 from global_descriptive_generator import master_descriptive_csv_generator, all_single_var_descriptive_csv_generator
 from multivariate_exploration import explore_multi_variables, multivariate_visualizations, correlational_analysis
 from gmm_analysis import gmm_analysis
+from rm_anova_icc import rm_anova_icc
 
 # Dataframe Selection
 
@@ -150,6 +151,18 @@ def run_gmm():
         return
     gmm_analysis(*selected)
 
+def run_rm_anova_icc():
+    selected = [w.get_value() for w in dropdown_widgets if w.get_value()]
+    selected = list(dict.fromkeys(selected))
+
+    if len(selected) < 2:
+        messagebox.showwarning(
+            "Not enough variables",
+            "Please select at least two variables."
+        )
+        return
+    rm_anova_icc(*selected)
+
 def run_master_gen():
     master_descriptive_csv_generator()
     messagebox.showinfo("Success!", "Master Descriptive CSV Generated")
@@ -183,7 +196,7 @@ var_count_selection = tk.Spinbox(top_frame, from_=1, to=10, width=5,
                                  textvariable=vc_str_var, 
                                  command=update_dropdowns
                                  )
-var_count_selection.grid(row=2, column=0, columnspan=3, pady=(10, 0))
+var_count_selection.grid(row=3, column=0, columnspan=3, pady=(10, 0))
 
 vc_label = ttk.Label(top_frame, text='Number of Variables?')
 vc_label.grid(row=1,column=0, columnspan=3, pady=(10, 0))
@@ -211,6 +224,10 @@ btn_multi_corr.grid(row=0, column=2, padx=5, sticky="nsew")
 
 btn_gmm = tk.Button(top_frame, text='GMM Analysis',
                     command=run_gmm)
+btn_gmm.grid(row=2, column=1, padx=5, pady=5, sticky="nsew")
+
+btn_gmm = tk.Button(top_frame, text='RM Anova + ICC',
+                    command=run_rm_anova_icc)
 btn_gmm.grid(row=1, column=1, padx=5, pady=5, sticky="nsew")
 
 

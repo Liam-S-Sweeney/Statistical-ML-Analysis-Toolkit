@@ -8,3 +8,5 @@ matplotlib
 statsmodels
 scikit-learn
 imbalanced-learn
+pyreadstat
+pingouin

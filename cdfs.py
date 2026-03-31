@@ -5,6 +5,7 @@ import scipy.stats as stats
 
 def compute_descriptives_for_series(series: pd.Series, name: str, position: int) -> dict:
     non_na = series.dropna()
+    non_na = pd.to_numeric(non_na, errors='coerce').dropna()
     values = non_na.to_numpy(dtype=float) if not non_na.empty else np.array([])
 
     out = {

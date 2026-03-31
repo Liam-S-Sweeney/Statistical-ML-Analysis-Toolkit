@@ -15,6 +15,10 @@ def explore_multi_variables(*cols, palette=PALETTE):
     # build df from selected cols 
     df = clean_impossible_var(clean_df, *cols)
 
+    if df.empty:
+        print(f"No rows with data for: {cols}. Are these from different waves?")
+        return
+
     descriptive_dict = [
         compute_descriptives_for_series(df[col], name=col, position=df.columns.get_loc(col))
         for col in cols
@@ -27,6 +31,7 @@ def explore_multi_variables(*cols, palette=PALETTE):
     for col in cols:
         # non_na df of cols
         plot_vals = df[col]
+        plot_vals = plot_vals[np.isfinite(plot_vals)]
         
         # attempt to add a palette
         try:
@@ -60,7 +65,6 @@ def explore_multi_variables(*cols, palette=PALETTE):
         ax_probplot.set_title(f'Probability Plot')
 
         # Histogram
-        plot_vals = plot_vals[np.isfinite(plot_vals)]
         mu, sigma = stats.norm.fit(plot_vals)
         counts, bins, _ = ax_hist.hist(
             plot_vals,
