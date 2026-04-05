@@ -1,6 +1,6 @@
 import numpy as np
 from config import IMPOSSIBLE_ZERO_VARS
-from data_loader import load_clean
+from pipelines.data_organizers.csv_loader import load_clean
 
 def clean_impossible_var(clean_df=load_clean(), *cols, impossible_zero_vars=IMPOSSIBLE_ZERO_VARS):
     df = clean_df[list(cols)].copy()

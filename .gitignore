@@ -9,6 +9,7 @@ venv/
 # --- Data (raw + exported) ---
 *.csv
 *.png
+*.sav
 data_files/
 
 # --- Generated outputs ---
@@ -26,4 +27,3 @@ Thumbs.db
 !diabetes.csv
 !.gitkeep
 !gui_display.png
-*.sav

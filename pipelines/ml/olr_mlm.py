@@ -3,9 +3,9 @@ import pandas as pd
 import scipy.stats as stats
 from statsmodels.miscmodels.ordinal_model import OrderedModel
 from statsmodels.regression.mixed_linear_model import MixedLM
-from data_loader import load_clean
-from config import ID_VAR, CORRELATIONAL_OUTPUT
-from impossible_var_cleaner import clean_impossible_var
+from pipelines.data_organizers.csv_loader import load_clean
+from config import ID_VAR
+from pipelines.data_organizers.impossible_var_cleaner import clean_impossible_var
 
 def olr_mlm(*cols,id_var=ID_VAR):
     clean_df = load_clean()

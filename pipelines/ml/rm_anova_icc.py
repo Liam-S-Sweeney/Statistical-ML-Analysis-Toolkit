@@ -1,8 +1,9 @@
 import pingouin as pg
 import pandas as pd
-from data_loader import load_clean
-from config import ID_VAR, CORRELATIONAL_OUTPUT
-from impossible_var_cleaner import clean_impossible_var
+from pipelines.data_organizers.csv_loader import load_clean
+from config import ID_VAR
+from pipelines.data_organizers.impossible_var_cleaner import clean_impossible_var
+from pipelines.data_organizers.file_pathways import MULTI_VAR_ANALYSIS_OUTPUT_FOLDER
 
 def rm_anova_icc(*cols,id_var=ID_VAR):
     clean_df = load_clean()
@@ -46,7 +47,7 @@ def rm_anova_icc(*cols,id_var=ID_VAR):
         ratings='score'
     )
 
-    out_dir = CORRELATIONAL_OUTPUT
+    out_dir = MULTI_VAR_ANALYSIS_OUTPUT_FOLDER
     out_dir.mkdir(parents=True, exist_ok=True)
     cols_title = '-'.join(cols)
 

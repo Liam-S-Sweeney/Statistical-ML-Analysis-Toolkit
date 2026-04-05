@@ -5,9 +5,10 @@ import os
 import pyreadstat
 import pandas as pd
 import re
-from config import CONVERT_DIR, DATA_DIR
+from pipelines.data_organizers.file_pathways import NON_CSVS_FOLDER, UNMERGED_CSVS_FOLDER
 
-def to_csv(convert_dir=CONVERT_DIR, output_path=DATA_DIR):
+def to_csv(convert_dir=NON_CSVS_FOLDER, output_path=UNMERGED_CSVS_FOLDER):
+    print('Convert beginning')
     for raw_file in convert_dir.iterdir():
         with open(raw_file, 'r') as rf:
             file_type = os.path.splitext(raw_file)[1]
@@ -36,4 +37,4 @@ def to_csv(convert_dir=CONVERT_DIR, output_path=DATA_DIR):
             else:
                 print('Viable data type not detected:', file_name)
 
-# to_csv()
+to_csv()

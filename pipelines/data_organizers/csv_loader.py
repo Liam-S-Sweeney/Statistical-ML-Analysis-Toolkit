@@ -1,13 +1,14 @@
 import pandas as pd
 import numpy as np
-from config import DATA_PATH, MISSING_CODES
+from config import MISSING_CODES
+from pipelines.data_organizers.file_pathways import MAIN_CSV
 
-def load_raw(path=DATA_PATH) -> pd.DataFrame:
+def load_raw(path=MAIN_CSV) -> pd.DataFrame:
     """Load raw dataset."""
     if not path.exists():
         raise FileNotFoundError(
             f"CSV file not found at: {path.resolve()}\n\n"
-            "Place the dataset inside the 'data_files' folder (or update DATA_PATH in config.py).\n"
+            "Place the dataset inside the 'data_files' folder (or update MAIN_CSV_NAME in config.py).\n"
         )
     return pd.read_csv(path, low_memory=False)
 
@@ -18,7 +19,7 @@ def clean_numeric(df: pd.DataFrame, missing_codes=MISSING_CODES) -> pd.DataFrame
     df[numeric_cols] = df[numeric_cols].replace(missing_codes, np.nan)
     return df
 
-def load_clean(path=DATA_PATH) -> pd.DataFrame:
+def load_clean(path=MAIN_CSV) -> pd.DataFrame:
     """Convenience function: load and clean dataset."""
     raw = load_raw(path)
     return clean_numeric(raw)

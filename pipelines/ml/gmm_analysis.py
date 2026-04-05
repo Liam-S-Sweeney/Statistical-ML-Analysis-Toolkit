@@ -8,9 +8,10 @@ from sklearn.decomposition import PCA
 from sklearn.metrics import normalized_mutual_info_score, adjusted_rand_score
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.model_selection import cross_val_score
-from impossible_var_cleaner import clean_impossible_var
-from config import DX, IMPOSSIBLE_ZERO_VARS, OUTPUT_PNGS_PATH, MULTIVARIATE_ANALYSIS_PATH
-from data_loader import load_clean
+from pipelines.data_organizers.impossible_var_cleaner import clean_impossible_var
+from config import DX
+from pipelines.data_organizers.file_pathways import BIC_AIC_VIS, CEV_PCA_VIS, GMM_HM_VIS, GMM_PP_VIS, GMM_ANALYSIS_OUTPUT_FOLDER
+from pipelines.data_organizers.csv_loader import load_clean
 
 def gmm_analysis(*cols,dx_col=DX):
 
@@ -57,7 +58,7 @@ def gmm_analysis(*cols,dx_col=DX):
     plt.grid(True)
     plt.tight_layout()
 
-    output_dir = OUTPUT_PNGS_PATH
+    output_dir = CEV_PCA_VIS
     cols_title = '-'.join(cols)
     plt.savefig(output_dir / f"{cols_title}-CEV_PCA.png", dpi=300, bbox_inches='tight')
 
@@ -69,9 +70,9 @@ def gmm_analysis(*cols,dx_col=DX):
         diag_kind='kde',
         )
     g.map_upper(sns.kdeplot)
-    output_dir = OUTPUT_PNGS_PATH
+    output_dir = GMM_PP_VIS
     cols_title = '-'.join(cols)
-    plt.savefig(output_dir / f"{cols_title}-Pair_Plot.png", dpi=300, bbox_inches='tight')
+    plt.savefig(output_dir / f"{cols_title}-GMM_PP.png", dpi=300, bbox_inches='tight')
     plt.show()
 
     # Model selection via BIC/AIC
@@ -127,7 +128,7 @@ def gmm_analysis(*cols,dx_col=DX):
         ax.legend()
 
     plt.tight_layout()
-    output_dir = OUTPUT_PNGS_PATH
+    output_dir = BIC_AIC_VIS
     cols_title = '-'.join(cols)
     plt.savefig(output_dir / f"{cols_title}-BIC_AIC.png", dpi=300, bbox_inches='tight')
     plt.show()
@@ -178,7 +179,7 @@ def gmm_analysis(*cols,dx_col=DX):
     plt.title("DX_GROUP vs GMM cluster (row-normalized)")
     plt.ylabel("DX_GROUP")
     plt.xlabel("GMM cluster")
-    output_dir = OUTPUT_PNGS_PATH
+    output_dir = GMM_HM_VIS
     cols_title = '-'.join(cols)
     plt.savefig(output_dir / f"{cols_title}-GMM_Heatmap.png", dpi=300, bbox_inches='tight')
 
@@ -215,7 +216,7 @@ def gmm_analysis(*cols,dx_col=DX):
     }])
 
     # Output DF -> CSV
-    output_dir = MULTIVARIATE_ANALYSIS_PATH
+    output_dir = GMM_ANALYSIS_OUTPUT_FOLDER
     cols_title = '-'.join(cols)
     output_db.to_csv(output_dir / f"ml_{cols_title}-gmm_analysis.csv",index=False)
     
