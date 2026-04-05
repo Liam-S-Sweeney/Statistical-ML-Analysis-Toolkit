@@ -37,5 +37,3 @@ def merge_csv(convert_dir=UNMERGED_CSVS_FOLDER, output_path = MASTER_CSVS_FOLDER
     merged.to_csv(output_path / f"{all_csvs_name}merged_raw.csv", index=False)
     print(f"Saved to {MASTER_CSVS_FOLDER}")
 
-
-merge_csv()

@@ -36,5 +36,3 @@ def to_csv(convert_dir=NON_CSVS_FOLDER, output_path=UNMERGED_CSVS_FOLDER):
 
             else:
                 print('Viable data type not detected:', file_name)
-
-to_csv()

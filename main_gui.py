@@ -29,9 +29,50 @@ df = get_df()
 var_options = list(df.columns)
 
 # --- UI ---
+st.set_page_config(
+    page_title="Statistical & ML Toolkit", 
+    page_icon="🧠", 
+    layout="wide",
+    initial_sidebar_state="auto",
+                   )
+
+st.markdown("""
+    <style>
+    h1, h3 {
+        color: #edfcff;
+        text-align: center;
+    }
+    p {
+        color: ##edfcff;
+        text-align: center;
+    }
+    .block-container {
+        padding-top: 2rem;
+        padding-bottom: 2rem;
+    }
+    .stMultiSelect > div {
+        border-radius: 8px;
+    }
+    .stButton>button {
+        background-color: #6c32ab;
+        border-radius: 8px;
+        height: 3em;
+    }
+    .stButton>button:hover {
+        background-color: #5a298f;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 st.title("Statistical & ML Analysis Toolkit")
 
-selected = st.multiselect("Select variables", var_options)
+signiture = 'Developed by Liam Sweeney'
+st.markdown(f"<p style='text-align: center; color: gray;'>{signiture}</p>", unsafe_allow_html=True)
+
+
+with st.sidebar:
+    st.header("Variable Selection")
+    selected = st.multiselect("Select variables", var_options)
 
 def warn_min(n=2):
     if len(selected) < n:
@@ -54,6 +95,7 @@ with col2:
         if warn_min(2):
             rm_anova_icc.rm_anova_icc(*selected)
             st.success("RM-Anova & ICC CSV Generated")
+st.divider()
 
 # --- ML Analyses ---
 st.subheader("ML Analyses")
@@ -68,6 +110,7 @@ with col4:
     if st.button("Ordinal Logistic Regression & Multilevel Modeling", use_container_width=True):
         if warn_min(2):
             olr_mlm(*selected)
+st.divider()
 
 # --- Data Visualizations ---
 st.subheader("Data Visualizations")
@@ -92,6 +135,7 @@ with col8:
     if st.button("PairPlot Visualization", use_container_width=True):
         if warn_min(2):
             pp_gen.pair_plot_visualizations(*selected)
+st.divider()
 
 # --- Full-Data Generators ---
 st.subheader("Full-Data Generators")
@@ -106,6 +150,7 @@ with col10:
     if st.button("All Variable Descriptives Generator", use_container_width=True):
         all_single_var_desc_gen.all_single_var_descriptive_generator()
         st.success("All Variable Descriptives Generated")
+st.divider()
 
 # --- Full-Data Generators ---
 st.subheader("Full-Data Generators")
@@ -120,3 +165,4 @@ with col12:
     if st.button("CSV Merger", use_container_width=True):
         csv_merger.merge_csv()
         st.success("All CSVs in the 'Unmerged CSV' folder have been merged")
+st.divider()
