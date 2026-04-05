@@ -31,6 +31,6 @@ build/
 # Exceptions
 !diabetes.csv
 !.gitkeep
-!gui_display.png
+!st_display.png
 
 
