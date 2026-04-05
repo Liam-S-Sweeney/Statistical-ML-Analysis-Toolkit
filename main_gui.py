@@ -6,7 +6,8 @@ from pipelines.statistics import master_descriptive_gen, all_single_var_desc_gen
 from pipelines.statistics.png_generators import desc_gen, hm_gen, pg_gen, pp_gen
 # ML
 from pipelines.ml import gmm_analysis, olr_mlm, rm_anova_icc
-#
+# Data Organizers
+from pipelines.data_organizers import csv_merger, type_converter
 
 import os
 
@@ -105,3 +106,17 @@ with col10:
     if st.button("All Variable Descriptives Generator", use_container_width=True):
         all_single_var_desc_gen.all_single_var_descriptive_generator()
         st.success("All Variable Descriptives Generated")
+
+# --- Full-Data Generators ---
+st.subheader("Full-Data Generators")
+col11, col12 = st.columns(2)
+
+with col11:
+    if st.button("File Type Converter", use_container_width=True):
+        type_converter.to_csv()
+        st.success("Data files converted to CSVs")
+
+with col12:
+    if st.button("CSV Merger", use_container_width=True):
+        csv_merger.merge_csv()
+        st.success("All CSVs in the 'Unmerged CSV' folder have been merged")

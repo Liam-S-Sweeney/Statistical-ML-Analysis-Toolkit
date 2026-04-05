@@ -6,16 +6,14 @@ __pycache__/
 .venv/
 venv/
 
+# --- Environment ---
+.env
+*.env
+
 # --- Data (raw + exported) ---
 *.csv
 *.png
 *.sav
-data_files/
-
-# --- Generated outputs ---
-multivariate_analysis/
-single_var_descriptives/
-outputs/
 
 # --- OS / IDE ---
 .DS_Store
@@ -23,7 +21,16 @@ Thumbs.db
 .vscode/
 .idea/
 
+# --- Python packaging ---
+dist/
+build/
+*.egg
+*.egg-info
+
+
 # Exceptions
 !diabetes.csv
 !.gitkeep
 !gui_display.png
+
+
