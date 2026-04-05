@@ -6,7 +6,7 @@ A desktop GUI for exploratory data analysis and unsupervised machine learning on
 
 ---
 
-![App Screenshot](docs/gui_display.png)
+![App Screenshot](docs/st_display.png)
 
 ---
 
