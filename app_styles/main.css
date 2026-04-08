@@ -1,0 +1,33 @@
+h1, h2, h3 {
+    color: #edfcff;
+    text-align: center;
+    text-decoration: underline;
+}
+
+p {
+    color: #edfcff;
+    text-align: center;
+}
+
+.block-container {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+}
+
+.stMultiSelect > div {
+    border-radius: 8px;
+}
+
+.stButton>button {
+    background-color: #6c32ab;
+    border-radius: 8px;
+    height: 3em;
+}
+
+.stButton>button:hover {
+    background-color: #5a298f;
+}
+
+.stMultiSelect { 
+    margin-top: -12px;
+}

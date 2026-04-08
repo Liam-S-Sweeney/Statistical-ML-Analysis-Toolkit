@@ -17,12 +17,14 @@ MAIN_FOLDER = Path(__file__).parent.parent.parent
 FILES_FOLDER = MAIN_FOLDER / 'files'
 OUTPUTS_FOLDER = MAIN_FOLDER / 'outputs'
 PIPELINES_FOLDER = MAIN_FOLDER / 'pipelines'
+APP_STYLES_FOLDER = MAIN_FOLDER / 'app_styles'
 
 """ Secondary Folder Pathways """
 # Files
 MASTER_CSVS_FOLDER = FILES_FOLDER / 'master_csvs'
 NON_CSVS_FOLDER = FILES_FOLDER / 'non_csvs'
 UNMERGED_CSVS_FOLDER = FILES_FOLDER / 'unmerged_csvs'
+
 # Outputs
 ALL_VAR_DESC_ANALYSIS_OUTPUT_FOLDER = OUTPUTS_FOLDER / 'all_var_desc_analysis_output'
 FIGURE_PNGS_OUTPUT_FOLDER = OUTPUTS_FOLDER / 'figure_pngs_output'
