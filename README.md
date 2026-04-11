@@ -115,7 +115,13 @@ DX = 'diagnosis_column'              # diagnostic label column for GMM
 
 Place your dataset in `files/master_csvs/`.
 
-### 5. Launch the app
+### 5. Install the package in editable mode
+```bash
+pip install -e .
+```
+This registers the project root on Python's path so all internal imports resolve correctly.
+
+### 6. Launch the app
 ```bash
 streamlit run main_gui.py
 ```
