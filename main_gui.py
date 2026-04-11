@@ -2,7 +2,7 @@ import streamlit as st
 from pipelines.data_organizers.file_pathways import MASTER_CSVS_FOLDER, RUNTIME_FOLDERS, MAIN_CSV
 from pipelines.data_organizers.csv_loader import load_clean
 # Statistics
-from pipelines.statistics import master_descriptive_gen, all_single_var_desc_gen, multivar_desc_gen
+from pipelines.statistics import master_descriptive_gen, all_single_var_desc_gen, multivar_desc_gen, chi_sqr
 from pipelines.statistics.png_generators import desc_gen, hm_gen, pg_gen, pp_gen
 # ML
 from pipelines.ml import gmm_analysis, olr, rm_anova_icc, ols
@@ -94,38 +94,45 @@ def exo_min(n=1):
 # --- Multivariate Analyses ---
 st.divider()
 st.subheader("Statistical Analyses")
-col1, col2 = st.columns(2)
 
-with col1:
+col_var_expl, col_rma_icc, col_chi = st.columns(3)
+with col_var_expl:
     if st.button("Uni/Multivariate Exploration", use_container_width=True):
         if warn_min(1):
             multivar_desc_gen.explore_multi_variables(*selected)
             st.success("Uni/Multivariate Exploration CSV Generated")
 
-with col2:
+with col_rma_icc:
     if st.button("RM-Anova & ICC", use_container_width=True):
         if warn_min(2):
             rm_anova_icc.rm_anova_icc(*selected)
             st.success("RM-Anova & ICC CSV Generated")
+
+with col_chi:
+    if st.button("Chi-Square Test", use_container_width=True):
+        if endo_max(1) and endo_min(1) and exo_min(1):
+            result = chi_sqr.run_chi_sqr(endo=endo_selected, exo=exo_selected)
+            st.success("OLR Analysis Generated")
+
 st.divider()
 
 # --- ML Analyses ---
 st.subheader("ML Analyses")
-col3, col4, col5 = st.columns(3)
+col_gmm, col_olr, col_ols = st.columns(3)
 
-with col3:
+with col_gmm:
     if st.button("GMM Analysis", use_container_width=True):
         if warn_min(2):
             gmm_analysis.gmm_analysis(*selected)
             st.success("GMM Analysis Generated")
 
-with col4:
+with col_olr:
     if st.button("Ordinal Logistic Regression (OLR)", use_container_width=True):
         if endo_max(1) and endo_min(1) and exo_min(1):
             result = olr.run_olr(endo=endo_selected, exo=exo_selected)
             st.success("OLR Analysis Generated")
 
-with col5:
+with col_ols:
     if st.button("Ordinary Least Squares (OLS) Regression", use_container_width=True):
         if endo_max(1) and endo_min(1) and exo_min(1):
             result = ols.run_ols(endo=endo_selected, exo=exo_selected)
@@ -134,27 +141,27 @@ st.divider()
 
 # --- Data Visualizations ---
 st.subheader("Data Visualizations")
-col6, col7, col8, col9 = st.columns(4)
+col_des_vis, col_hm, col_pg, col_pp = st.columns(4)
 
-with col6:
+with col_des_vis:
     if st.button("Descriptive Visualization", use_container_width=True):
         if warn_min(2):
             desc_gen.desc_visualization(*selected)
             st.success("Descriptive Visualization Generated")
 
-with col7:
+with col_hm:
     if st.button("Heatmap Visualization", use_container_width=True):
         if warn_min(2):
             hm_gen.heatmap_visualizations(*selected)
             st.success("Heatmap Vsiualization Generated")
 
-with col8:
+with col_pg:
     if st.button("PairGrid Visualization", use_container_width=True):
         if warn_min(2):
             pg_gen.pairgrid_visualizations(*selected)
             st.success("PairGrid Vsiualization Generated")
 
-with col9:
+with col_pp:
     if st.button("PairPlot Visualization", use_container_width=True):
         if warn_min(2):
             pp_gen.pair_plot_visualizations(*selected)
@@ -163,14 +170,14 @@ st.divider()
 
 # --- Full-Data Generators ---
 st.subheader("Full-Data Generators")
-col10, col11 = st.columns(2)
+col_md_gen, col_av_gen = st.columns(2)
 
-with col10:
+with col_md_gen:
     if st.button("Master Descriptive CSV Generator", use_container_width=True):
         master_descriptive_gen.master_descriptive_csv_generator()
         st.success("Master Descriptive CSV Generated")
 
-with col11:
+with col_av_gen:
     if st.button("All Variable Descriptives Generator", use_container_width=True):
         all_single_var_desc_gen.all_single_var_descriptive_generator()
         st.success("All Variable Descriptives Generated")
@@ -178,14 +185,14 @@ st.divider()
 
 # --- Full-Data Generators ---
 st.subheader("Full-Data Generators")
-col12, col13 = st.columns(2)
+col_to_csv, col_csv_merger = st.columns(2)
 
-with col12:
+with col_to_csv:
     if st.button("File Type Converter", use_container_width=True):
         type_converter.to_csv()
         st.success("Data files converted to CSVs")
 
-with col13:
+with col_csv_merger:
     if st.button("CSV Merger", use_container_width=True):
         csv_merger.merge_csv()
         st.success("All CSVs in the 'Unmerged CSV' folder have been merged")

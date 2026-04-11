@@ -37,11 +37,16 @@ def pair_plot_visualizations(*cols, hue_col=HUE_COL, size_col=SIZE_COL, palette=
         df[hue_col] = clean_df[hue_col]
         hue_to_use = hue_col
 
-    sns.pairplot(
-        data=df,
-        hue=hue_to_use,     
-        kind="reg"
-    )
+        sns.pairplot(
+            data=df,
+            hue=hue_to_use,     
+            kind="reg"
+        )
+    else:
+        sns.pairplot(
+                data=df,     
+                kind="reg"
+            )
 
     output_dir = PP_VIS
     cols_title = '-'.join(cols)
