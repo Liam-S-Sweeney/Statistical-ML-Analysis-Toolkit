@@ -2,7 +2,7 @@ import numpy as np
 from config import IMPOSSIBLE_ZERO_VARS
 from pipelines.data_organizers.csv_loader import load_clean
 
-def clean_impossible_var(clean_df=load_clean(), *cols, impossible_zero_vars=IMPOSSIBLE_ZERO_VARS):
+def clean_impossible_var(clean_df, *cols, impossible_zero_vars=IMPOSSIBLE_ZERO_VARS):
     df = clean_df[list(cols)].copy()
     
     df = df.dropna(how='all')

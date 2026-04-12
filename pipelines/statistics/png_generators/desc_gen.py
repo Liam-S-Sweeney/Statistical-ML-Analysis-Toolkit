@@ -6,7 +6,9 @@ from pipelines.data_organizers.csv_loader import load_clean
 from config import PALETTE
 from pipelines.data_organizers.file_pathways import DESC_VIS
 
-def desc_visualization(*cols, df=load_clean(), palette = PALETTE):
+def desc_visualization(*cols, df=None, palette=PALETTE):
+    if df is None:
+        df = load_clean()
     for col in cols:
         # non_na df of cols
         plot_vals = df[col]

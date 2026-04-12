@@ -5,185 +5,167 @@ Summary: A toolkit for statistical machine learning
 Requires-Python: >=3.8
 Description-Content-Type: text/markdown
 
-# Statistical ML Analysis Toolkit
+# Statistical & ML Analysis Toolkit 🧠
 
-A desktop GUI for exploratory data analysis and unsupervised machine learning on quantitative CSV datasets. Built in Python with Tkinter — functions as a free, open-source alternative to SPSS for research data, with an extended ML pipeline for subgroup discovery.
+A Python-based GUI toolkit for statistical and machine learning analysis, built on Streamlit. Designed for clinical and longitudinal research data, with a focus on messy, real-world datasets.
 
-> **Validated on:** Pima Indians Diabetes Dataset, Parkinson's vocal biomarker data, neuroimaging datasets
-
----
-
-![App Screenshot](docs/gui_display.png)
+Developed by [Liam Sweeney](https://github.com/Liam-S-Sweeney)
 
 ---
 
-## What It Does
+## Features
 
-Select variables from any CSV dataset using searchable dropdowns, then run any of the following with one click:
+### Statistical Analyses
+- **Uni/Multivariate Exploration** — descriptive statistics across one or more selected variables
+- **Repeated Measures ANOVA & ICC** — within-subject analysis across waves via `pingouin`, paired as a single analysis unit
 
-| Analysis | What You Get |
-|---|---|
-| **Descriptive Statistics** | Per-variable and master summary CSVs: mean, median, mode, variance, skew, kurtosis, SE, IQR, frequency counts |
-| **Multivariate Exploration** | 5-panel visualization per variable: probability plot, histogram with normal fit, boxplot, violin plot, swarm plot |
-| **Multivariate Visualization** | PairGrid with histograms, scatter plots, and KDE; optional grouping variable encoding |
-| **Correlational Analysis** | Pearson correlation heatmap and regression pairplot |
-| **GMM Analysis** | Full unsupervised ML pipeline — see below |
+### ML Analyses
+- **Gaussian Mixture Model (GMM)** — unsupervised clustering with automatic model selection via BIC/AIC across covariance types and K values; includes PCA dimensionality reduction, LDA cross-validation, NMI/ARI alignment scoring, and cluster probability output
+- **Ordinal Logistic Regression (OLR)** — for ordinal dependent variables, fit via maximum likelihood with logit link
+- **Ordinary Least Squares (OLS) Regression** — for continuous dependent variables with standard diagnostics
 
-All outputs save automatically to disk as CSVs and 300 DPI PNGs.
-## What It Does
+### Data Visualizations
+- **Descriptive Visualization** — distribution plots per variable
+- **Heatmap Visualization** — correlation heatmap across selected variables
+- **PairGrid Visualization** — pairwise grid plots
+- **PairPlot Visualization** — pairwise scatter + KDE plots
 
-Select variables from any CSV dataset using searchable dropdowns, then run any of the following with one click:
-
-| Analysis | What You Get |
-|---|---|
-| **Descriptive Statistics** | Per-variable and master summary CSVs: mean, median, mode, variance, skew, kurtosis, SE, IQR, frequency counts |
-| **Multivariate Exploration** | 5-panel visualization per variable: probability plot, histogram with normal fit, boxplot, violin plot, swarm plot |
-| **Multivariate Visualization** | PairGrid with histograms, scatter plots, and KDE; optional grouping variable encoding |
-| **Correlational Analysis** | Pearson correlation heatmap and regression pairplot |
-| **GMM Analysis** | Full unsupervised ML pipeline — see below |
-
-All outputs save automatically to disk as CSVs and 300 DPI PNGs.
+### Full-Data Generators
+- **Master Descriptive CSV Generator** — descriptive statistics for every variable in the dataset
+- **All Variable Descriptives Generator** — individual descriptive outputs per variable
+- **File Type Converter** — converts non-CSV files (e.g. `.sav`) to CSV
+- **CSV Merger** — merges all CSVs in the `unmerged_csvs/` folder into a single master CSV
 
 ---
 
-## GMM Pipeline (Quick Summary)
+## Project Structure
 
-1. **Clean** — Drop NaN rows; replace physiologically impossible zeros with NaN for configurable columns
-2. **Standardize** — Z-score all features via `StandardScaler`
-3. **LDA check** — 5-fold cross-validated LDA establishes a supervised upper bound before unsupervised clustering
-4. **PCA** — Reduce to components explaining ≥ 95% variance; fit all GMMs in PCA space
-5. **Model selection** — Fit 40 models (K = 1–10 × 4 covariance types); select best by BIC with 1-std acceptable range
-6. **Evaluate** — NMI and ARI against diagnosis labels; row-normalized crosstab heatmap
-7. **Export** — CSV with all model selection results, cluster assignments, and alignment metrics
-## GMM Pipeline (Quick Summary)
-
-1. **Clean** — Drop NaN rows; replace physiologically impossible zeros with NaN for configurable columns
-2. **Standardize** — Z-score all features via `StandardScaler`
-3. **LDA check** — 5-fold cross-validated LDA establishes a supervised upper bound before unsupervised clustering
-4. **PCA** — Reduce to components explaining ≥ 95% variance; fit all GMMs in PCA space
-5. **Model selection** — Fit 40 models (K = 1–10 × 4 covariance types); select best by BIC with 1-std acceptable range
-6. **Evaluate** — NMI and ARI against diagnosis labels; row-normalized crosstab heatmap
-7. **Export** — CSV with all model selection results, cluster assignments, and alignment metrics
+```
+Statistical-ML-Analysis-Toolkit/
+├── main_gui.py                        # Streamlit GUI entry point
+├── config.py                          # Dataset configuration
+├── requirements.txt
+├── app_styles/
+│   ├── load_css.py
+│   └── main.css
+├── files/
+│   ├── master_csvs/                   # Place your dataset here
+│   ├── unmerged_csvs/                 # CSVs to be merged
+│   └── non_csvs/                      # Non-CSV files for conversion
+├── outputs/
+│   ├── all_var_desc_analysis_output/
+│   ├── figure_pngs_output/            # All generated visualizations
+│   ├── gmm_analysis_output/
+│   ├── master_var_desc_output/
+│   ├── multi_var_analysis_output/     # RM-ANOVA & ICC outputs
+│   └── regression_analysis_output/   # OLR & OLS outputs
+└── pipelines/
+    ├── data_organizers/
+    │   ├── csv_loader.py
+    │   ├── csv_merger.py
+    │   ├── file_pathways.py
+    │   ├── impossible_var_cleaner.py
+    │   └── type_converter.py
+    ├── ml/
+    │   ├── gmm_analysis.py
+    │   ├── olr.py
+    │   ├── ols.py
+    │   └── rm_anova_icc.py
+    ├── statistics/
+    │   ├── master_descriptive_gen.py
+    │   ├── all_single_var_desc_gen.py
+    │   ├── multivar_desc_gen.py
+    │   └── png_generators/
+    │       ├── desc_gen.py
+    │       ├── hm_gen.py
+    │       ├── pg_gen.py
+    │       └── pp_gen.py
+    └── utility/
+        └── cdfs.py
+```
 
 ---
 
-## Quickstart
-## Quickstart
+## Setup
 
+### 1. Clone the repository
 ```bash
 git clone https://github.com/Liam-S-Sweeney/Statistical-ML-Analysis-Toolkit.git
 cd Statistical-ML-Analysis-Toolkit
+```
 
+### 2. Create and activate a virtual environment
+```bash
 python -m venv venv
-source venv/bin/activate        # macOS/Linux
-venv\Scripts\Activate.ps1       # Windows PowerShell
+# Windows
+venv\Scripts\activate
+# Mac/Linux
+source venv/bin/activate
+```
 
-source venv/bin/activate        # macOS/Linux
-venv\Scripts\Activate.ps1       # Windows PowerShell
-
+### 3. Install dependencies
+```bash
 pip install -r requirements.txt
 ```
 
-Place your CSV in `data_files/`, update `DATA_PATH` in `config.py`, then:
-Place your CSV in `data_files/`, update `DATA_PATH` in `config.py`, then:
+### 4. Configure your dataset
 
+Edit `config.py`:
+
+```python
+MAIN_CSV_NAME = 'your_dataset.csv'   # filename of your CSV
+ID_VAR = 'subject_id'                # subject/participant ID column
+MISSING_CODES = [-99, -999, -9999]   # values to treat as missing
+IMPOSSIBLE_ZERO_VARS = []            # columns where 0 is physiologically impossible
+DX = 'diagnosis_column'              # diagnostic label column for GMM
+```
+
+Place your dataset in `files/master_csvs/`.
+
+### 5. Launch the app
 ```bash
-python main_gui.py
-```
-
-The tool ships pre-configured for the bundled [Pima Indians Diabetes Dataset](https://raw.githubusercontent.com/plotly/datasets/master/diabetes.csv).
-The tool ships pre-configured for the bundled [Pima Indians Diabetes Dataset](https://raw.githubusercontent.com/plotly/datasets/master/diabetes.csv).
-
----
-
-## Configuration
-## Configuration
-
-All parameters live in `config.py`. Update when switching datasets.
-All parameters live in `config.py`. Update when switching datasets.
-
-| Parameter | Description |
-|---|---|
-| `DATA_PATH` | Path to your CSV inside `data_files/` |
-| `DX` | Diagnosis / outcome column name (used by GMM for cluster evaluation) |
-| `IMPOSSIBLE_ZERO_VARS` | Columns where zero is physiologically impossible — zeros replaced with NaN before GMM |
-| `MISSING_CODES` | Numeric missing-data codes (e.g. `-99`, `-999`) — replaced with NaN on load |
-| `HUE_COL` / `SIZE_COL` | Grouping columns for PairGrid encoding — set to a non-existent column to disable |
-
----
-
-## Project Structure
-
-```
-Statistical-ML-Analysis-Toolkit/
-├── main_gui.py                      # Entry point — Tkinter GUI
-├── config.py                        # All configurable parameters
-├── data_loader.py                   # CSV loading and missing-code cleaning
-├── cdfs.py                          # Descriptive statistics engine
-├── impossible_var_cleaner.py        # Zero-imputation and NaN cleaning
-├── global_descriptive_generator.py  # Master and per-variable CSV generators
-├── multivariate_exploration.py      # Exploration, visualization, correlation
-├── gmm_analysis.py                  # Full GMM pipeline
-├── data_files/                      # Place dataset here
-├── single_var_descriptives/         # Auto-generated per-variable CSVs
-├── multivariate_analysis/           # Auto-generated multivariate outputs
-└── output_pngs/                     # Auto-generated 300 DPI plots
+streamlit run main_gui.py
 ```
 
 ---
 
-## Interpreting GMM Output
+## Usage
 
-| Result | Interpretation |
-| `DATA_PATH` | Path to your CSV inside `data_files/` |
-| `DX` | Diagnosis / outcome column name (used by GMM for cluster evaluation) |
-| `IMPOSSIBLE_ZERO_VARS` | Columns where zero is physiologically impossible — zeros replaced with NaN before GMM |
-| `MISSING_CODES` | Numeric missing-data codes (e.g. `-99`, `-999`) — replaced with NaN on load |
-| `HUE_COL` / `SIZE_COL` | Grouping columns for PairGrid encoding — set to a non-existent column to disable |
+**Variable Selection (Sidebar)**
+- **General Variables** — used for descriptive stats, GMM, RM-ANOVA, and visualizations
+- **Dependent Variables** — endogenous variable for OLR and OLS (select one)
+- **Independent Variables** — exogenous predictors for OLR and OLS
 
----
+**Running Analyses**
 
-## Project Structure
-
-```
-Statistical-ML-Analysis-Toolkit/
-├── main_gui.py                      # Entry point — Tkinter GUI
-├── config.py                        # All configurable parameters
-├── data_loader.py                   # CSV loading and missing-code cleaning
-├── cdfs.py                          # Descriptive statistics engine
-├── impossible_var_cleaner.py        # Zero-imputation and NaN cleaning
-├── global_descriptive_generator.py  # Master and per-variable CSV generators
-├── multivariate_exploration.py      # Exploration, visualization, correlation
-├── gmm_analysis.py                  # Full GMM pipeline
-├── data_files/                      # Place dataset here
-├── single_var_descriptives/         # Auto-generated per-variable CSVs
-├── multivariate_analysis/           # Auto-generated multivariate outputs
-└── output_pngs/                     # Auto-generated 300 DPI plots
-```
+Select variables in the sidebar, then click the corresponding button in the main panel. All outputs are saved automatically to the relevant subfolder in `outputs/`.
 
 ---
 
-## Interpreting GMM Output
+## Data Notes
 
-| Result | Interpretation |
-|---|---|
-| **ARI / NMI near 0** | Clusters don't align with diagnostic labels — may reflect that GMM finds density modes, not label boundaries. Cross-reference LDA accuracy. |
-| **ARI > 0.2** | Moderate cluster–diagnosis alignment; diagnostic groups occupy partially distinct regions of feature space |
-| **Flat BIC curve** | No strong cluster signal — data may not contain separable subpopulations for these features |
-| **K = 1 selected** | Single density mode; consider different feature selection |
-| **High LDA, low ARI** | Features are linearly separable under supervision but do not form natural density clusters |
-| **ARI / NMI near 0** | Clusters don't align with diagnostic labels — may reflect that GMM finds density modes, not label boundaries. Cross-reference LDA accuracy. |
-| **ARI > 0.2** | Moderate cluster–diagnosis alignment; diagnostic groups occupy partially distinct regions of feature space |
-| **Flat BIC curve** | No strong cluster signal — data may not contain separable subpopulations for these features |
-| **K = 1 selected** | Single density mode; consider different feature selection |
-| **High LDA, low ARI** | Features are linearly separable under supervision but do not form natural density clusters |
+- Missing values are handled automatically using the codes defined in `config.py`
+- Variables listed in `IMPOSSIBLE_ZERO_VARS` have zero values replaced with NaN before analysis
+- The CSV Merger supports longitudinal data with wave-prefixed column naming (e.g. `W1_varname`, `W2_varname`)
+- RM-ANOVA and ICC require variables representing the same measure across multiple timepoints/waves
 
 ---
 
-## Requirements
+## Dependencies
 
-```
-pandas numpy matplotlib seaborn scipy statsmodels scikit-learn imbalanced-learn requests
-```
-pandas numpy matplotlib seaborn scipy statsmodels scikit-learn imbalanced-learn requests
-```
+- `pandas`, `numpy`, `scipy`
+- `statsmodels` — OLR, OLS
+- `scikit-learn` — GMM, PCA, LDA, StandardScaler
+- `pingouin` — RM-ANOVA, ICC
+- `matplotlib`, `seaborn` — visualizations
+- `pyreadstat` — `.sav` file conversion
+- `streamlit` — GUI
+
+---
+
+## Roadmap
+
+- [ ] Supervised ML — Logistic Regression, Random Forest
+- [ ] Multilevel Modeling (MLM) with wide-to-long reshape pipeline
+- [ ] PyTorch integration
+- [ ] SOLID/class-based refactor into a proper package structure
