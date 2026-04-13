@@ -1,8 +1,16 @@
+import numpy as np
 import pandas as pd
 from scipy.stats import chi2_contingency
 from config import ID_VAR
 from pipelines.data_organizers.impossible_var_cleaner import endo_exo_clean_impossible_var
 from pipelines.data_organizers.file_pathways import MULTI_VAR_ANALYSIS_OUTPUT_FOLDER
+
+def cramers_v_label(v):
+    if np.isnan(v):   return np.nan
+    if v < 0.10:      return 'negligible'
+    if v < 0.20:      return 'small'
+    if v < 0.40:      return 'medium'
+    return 'large'
 
 def run_chi_sqr(endo, exo, id_var=ID_VAR):
     df = endo_exo_clean_impossible_var(endo, *exo, id_var)
@@ -13,19 +21,25 @@ def run_chi_sqr(endo, exo, id_var=ID_VAR):
 
     # Chi Square Results
     for exo_var in exo:
-        contgency_table = pd.crosstab(df[endo_str], df[exo_var])
-        chi2, p, dof, expected_freq = chi2_contingency(contgency_table)
+        contingency_table = pd.crosstab(df[endo_str], df[exo_var])
+        chi2, p, dof, expected_freq = chi2_contingency(contingency_table)
+        min_dim = min(contingency_table.shape) - 1
+        cramers_v = np.sqrt(chi2 / (contingency_table.values.sum() * min_dim)) if min_dim > 0 else np.nan
+        cv_label = cramers_v_label(cramers_v)
 
         # Chi Output Summary
         summary = pd.DataFrame([{
             'chi2': chi2,
             'p': p,
             'dof': dof,
+            'cramers_v': cramers_v,
+            'cv_label': cv_label,
         }])
+        
         expected_df = pd.DataFrame(
             expected_freq,
-            index=contgency_table.index,
-            columns=contgency_table.columns,
+            index=contingency_table.index,
+            columns=contingency_table.columns,
         )
 
         cols_title = f'{endo_str}-{exo_var}'

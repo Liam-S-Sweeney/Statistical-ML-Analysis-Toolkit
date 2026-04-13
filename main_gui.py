@@ -10,6 +10,8 @@ from pipelines.statistics.png_generators import desc_gen, hm_gen, pg_gen, pp_gen
 from pipelines.ml import gmm_analysis, olr, rm_anova_icc, ols
 # Data Organizers
 from pipelines.data_organizers import csv_merger, type_converter
+# Utility
+from pipelines.utility import overlap_checker
 # Styles
 from app_styles import load_css
 
@@ -65,9 +67,12 @@ with st.sidebar:
         st.markdown("""
         <p>Independent Variables</p>
         """, unsafe_allow_html=True)
-        exo_selected = st.multiselect("Independetnt / Exogenous", [var for var in var_options if var not in endo_selected], label_visibility='collapsed')
+        exo_selected = st.multiselect("Independetnt / Exogenous", var_options, label_visibility='collapsed')
+        
+        overlap_checker.check_for_var_overlap(endo=endo_selected, exo=exo_selected)
     else:
         st.info("Load a CSV to enable variable selection.")
+
 # --- N Var Verification ---
 def warn_min(n=2):
     if len(selected) < n:

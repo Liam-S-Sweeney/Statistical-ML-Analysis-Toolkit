@@ -4,8 +4,7 @@ import pandas as pd
 import scipy.stats as stats
 
 def compute_descriptives_for_series(series: pd.Series, name: str, position: int) -> dict:
-    non_na = series.dropna()
-    non_na = pd.to_numeric(non_na, errors='coerce').dropna()
+    non_na = pd.to_numeric(series, errors='coerce').dropna()
     values = non_na.to_numpy(dtype=float) if not non_na.empty else np.array([])
 
     out = {
@@ -17,6 +16,7 @@ def compute_descriptives_for_series(series: pd.Series, name: str, position: int)
         "skew": np.nan, "kurtosis": np.nan,
         "count": np.nan, "frequency": np.nan,
         "min": np.nan, "max": np.nan, "se_mean": np.nan,
+        "sw_stat": np.nan, "sw_p": np.nan, "normal_sw": np.nan,
     }
 
     if non_na.empty:
@@ -39,13 +39,13 @@ def compute_descriptives_for_series(series: pd.Series, name: str, position: int)
 
     # shape
     if values.size >= 3 and not np.isclose(values.std(ddof=0), 0.0, atol=1e-8):
-        out["skew"] = stats.skew(values)
-        out["kurtosis"] = stats.kurtosis(values)
+        out["skew"] = stats.skew(values, bias=False)
+        out["kurtosis"] = stats.kurtosis(values, bias=False)
 
     # frequency
     unique_values, counts = np.unique(values, return_counts=True)
     if len(unique_values) > 20:
-        out["frequency"] = "CONTINUOUS"
+        out["frequency"] = "uv > 20"
     else:
         percents = np.round((counts / counts.sum()) * 100, 2)
         out["frequency"] = [(float(uv), int(ct), float(p)) for uv, ct, p in zip(unique_values, counts, percents)]
@@ -55,5 +55,12 @@ def compute_descriptives_for_series(series: pd.Series, name: str, position: int)
     out["min"] = float(non_na.min())
     out["max"] = float(non_na.max())
     out["se_mean"] = float(out["std"] / np.sqrt(out["count"])) if out["count"] > 0 else np.nan
+
+    # normality <- Only valid for n < 5000
+    if 3 <= values.size <= 5000:
+        sw_stat, sw_p = stats.shapiro(values)
+        out["sw_stat"] = float(sw_stat)
+        out["sw_p"] = float(sw_p)
+        out["normal_sw"] = sw_p > 0.05
 
     return out
