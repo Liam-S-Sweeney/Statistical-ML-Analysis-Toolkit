@@ -7,7 +7,7 @@ from pipelines.data_organizers.csv_loader import load_clean
 from pipelines.statistics import master_descriptive_gen, all_single_var_desc_gen, multivar_desc_gen, chi_sqr
 from pipelines.statistics.png_generators import desc_gen, hm_gen, pg_gen, pp_gen
 # ML
-from pipelines.ml import gmm_analysis, olr, rm_anova_icc, ols
+from pipelines.ml import gmm_analysis, olr, rm_anova_icc, ols, mra, nbr
 # Data Organizers
 from pipelines.data_organizers import csv_merger, type_converter
 # Utility
@@ -68,8 +68,15 @@ with st.sidebar:
         <p>Independent Variables</p>
         """, unsafe_allow_html=True)
         exo_selected = st.multiselect("Independetnt / Exogenous", var_options, label_visibility='collapsed')
-        
-        overlap_checker.check_for_var_overlap(endo=endo_selected, exo=exo_selected)
+        st.divider()
+
+        st.markdown("""
+        <p>Moderator Variable</p>
+        """, unsafe_allow_html=True)
+        mod_selected = st.multiselect("Moderator", var_options, label_visibility='collapsed')
+        overlap_checker.check_for_var_overlap(endo=endo_selected, exo=exo_selected, mod=mod_selected)
+        st.divider()
+
     else:
         st.info("Load a CSV to enable variable selection.")
 
@@ -89,6 +96,12 @@ def endo_max(n=1):
 def endo_min(n=1):
     if len(endo_selected) < n:
         st.warning(f"Please select at least {n} endogenous/dependent  variable{'s' if n > 1 else ''}.")
+        return False
+    return True
+
+def exo_max(n=1):
+    if len(exo_selected) > n:
+        st.warning(f"Please select at most {n} exogenous/independent variable{'s' if n > 1 else ''}.")
         return False
     return True
 
@@ -125,7 +138,7 @@ st.divider()
 
 # --- ML Analyses ---
 st.subheader("ML Analyses")
-col_gmm, col_olr, col_ols = st.columns(3)
+col_gmm, col_olr, col_nbr, col_ols, col_mra = st.columns(5)
 
 with col_gmm:
     if st.button("GMM Analysis", use_container_width=True):
@@ -134,16 +147,34 @@ with col_gmm:
             st.success("GMM Analysis Generated")
 
 with col_olr:
-    if st.button("Ordinal Logistic Regression (OLR)", use_container_width=True):
+    if st.button("OLR", use_container_width=True):
         if csv_available and endo_max(1) and endo_min(1) and exo_min(1):
             result = olr.run_olr(endo=endo_selected, exo=exo_selected)
             st.success("OLR Analysis Generated")
 
+with col_nbr:
+    if st.button("NBR", use_container_width=True):
+        if csv_available and endo_max(1) and endo_min(1) and exo_min(1):
+            result = nbr.run_nbr(endo=endo_selected, exo=exo_selected)
+            st.success("NBR Analysis Generated")          
+
 with col_ols:
-    if st.button("Ordinary Least Squares (OLS) Regression", use_container_width=True):
+    if st.button("OLSR", use_container_width=True):
         if csv_available and endo_max(1) and endo_min(1) and exo_min(1):
             result = ols.run_ols(endo=endo_selected, exo=exo_selected)
             st.success("OLS Analysis Generated")
+
+with col_mra:
+    if st.button("MRA + SSA", use_container_width=True):
+        if csv_available and endo_max(1) and endo_min(1) and exo_max(1) and exo_min(1):
+            result = mra.run_mra(
+                endo=endo_selected, 
+                focal_var=exo_selected, 
+                moderator_var=mod_selected,
+            )
+            st.success("OLS Analysis Generated")
+
+
 st.divider()
 
 # --- Data Visualizations ---
@@ -151,25 +182,25 @@ st.subheader("Data Visualizations")
 col_des_vis, col_hm, col_pg, col_pp = st.columns(4)
 
 with col_des_vis:
-    if st.button("Descriptive Visualization", use_container_width=True):
+    if st.button("Descriptive", use_container_width=True):
         if csv_available and warn_min(2):
             desc_gen.desc_visualization(*selected)
             st.success("Descriptive Visualization Generated")
 
 with col_hm:
-    if st.button("Heatmap Visualization", use_container_width=True):
+    if st.button("Heatmap", use_container_width=True):
         if csv_available and warn_min(2):
             hm_gen.heatmap_visualizations(*selected)
             st.success("Heatmap Vsiualization Generated")
 
 with col_pg:
-    if st.button("PairGrid Visualization", use_container_width=True):
+    if st.button("PairGrid", use_container_width=True):
         if csv_available and warn_min(2):
             pg_gen.pairgrid_visualizations(*selected)
             st.success("PairGrid Vsiualization Generated")
 
 with col_pp:
-    if st.button("PairPlot Visualization", use_container_width=True):
+    if st.button("PairPlot", use_container_width=True):
         if csv_available and warn_min(2):
             pp_gen.pair_plot_visualizations(*selected)
             st.success("PairPlot Vsiualization Generated")

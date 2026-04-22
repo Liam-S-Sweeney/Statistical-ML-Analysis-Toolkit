@@ -14,7 +14,7 @@ def compute_descriptives_for_series(series: pd.Series, name: str, position: int)
         "var": np.nan, "std": np.nan, "range": np.nan,
         "q1": np.nan, "q3": np.nan, "iqr": np.nan,
         "skew": np.nan, "kurtosis": np.nan,
-        "count": np.nan, "frequency": np.nan,
+        "count": np.nan,
         "min": np.nan, "max": np.nan, "se_mean": np.nan,
         "sw_stat": np.nan, "sw_p": np.nan, "normal_sw": np.nan,
     }
@@ -23,15 +23,15 @@ def compute_descriptives_for_series(series: pd.Series, name: str, position: int)
         return out
 
     # central tendency
-    out["mean"] = non_na.mean()
-    out["median"] = non_na.median()
+    out["mean"] = round(non_na.mean(),3)
+    out["median"] = round(non_na.median(),3)
     
     m = non_na.mode()
     out["mode"] = m.iloc[0] if not m.empty else np.nan
 
     # variability
-    out["var"] = non_na.var()
-    out["std"] = non_na.std()
+    out["var"] = round(non_na.var(ddof=1),3)
+    out["std"] = round(non_na.std(ddof=1),3)
     out["range"] = non_na.max() - non_na.min()
     out["q1"] = np.percentile(values, 25)
     out["q3"] = np.percentile(values, 75)
@@ -39,28 +39,20 @@ def compute_descriptives_for_series(series: pd.Series, name: str, position: int)
 
     # shape
     if values.size >= 3 and not np.isclose(values.std(ddof=0), 0.0, atol=1e-8):
-        out["skew"] = stats.skew(values, bias=False)
-        out["kurtosis"] = stats.kurtosis(values, bias=False)
-
-    # frequency
-    unique_values, counts = np.unique(values, return_counts=True)
-    if len(unique_values) > 20:
-        out["frequency"] = "uv > 20"
-    else:
-        percents = np.round((counts / counts.sum()) * 100, 2)
-        out["frequency"] = [(float(uv), int(ct), float(p)) for uv, ct, p in zip(unique_values, counts, percents)]
+        out["skew"] = round(stats.skew(values, bias=False),3)
+        out["kurtosis"] = round(stats.kurtosis(values, bias=False),3)
 
     # misc
     out["count"] = int(values.size)
     out["min"] = float(non_na.min())
     out["max"] = float(non_na.max())
-    out["se_mean"] = float(out["std"] / np.sqrt(out["count"])) if out["count"] > 0 else np.nan
+    out["se_mean"] = round(float(out["std"] / np.sqrt(out["count"])) if out["count"] > 0 else np.nan,3)
 
     # normality <- Only valid for n < 5000
     if 3 <= values.size <= 5000:
         sw_stat, sw_p = stats.shapiro(values)
-        out["sw_stat"] = float(sw_stat)
-        out["sw_p"] = float(sw_p)
+        out["sw_stat"] = round(float(sw_stat),3)
+        out["sw_p"] = round(float(sw_p),3)
         out["normal_sw"] = sw_p > 0.05
 
     return out

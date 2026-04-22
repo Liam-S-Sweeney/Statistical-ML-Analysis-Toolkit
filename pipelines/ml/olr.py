@@ -1,3 +1,4 @@
+import pandas as pd
 from statsmodels.miscmodels.ordinal_model import OrderedModel
 from config import ID_VAR
 from pipelines.data_organizers.impossible_var_cleaner import endo_exo_clean_impossible_var
@@ -6,9 +7,12 @@ from pipelines.data_organizers.file_pathways import REGRESSION_ANALYSIS_OUTPUT_F
 def run_olr(endo, exo, id_var=ID_VAR):
     df = endo_exo_clean_impossible_var(endo, *exo, id_var)
 
+    endog_series = df[endo].astype('category')
+    endog_ordered = pd.Categorical(endog_series, categories=sorted(endog_series.cat.categories), ordered=True)
+
     # Ordinal Logistic Regression
     olr_result = OrderedModel(
-        endog=df[endo],
+        endog=endog_ordered,
         exog=df[exo],
         distr='logit',
     ).fit(method='bfgs')

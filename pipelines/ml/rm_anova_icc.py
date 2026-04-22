@@ -6,6 +6,10 @@ from pipelines.data_organizers.impossible_var_cleaner import clean_impossible_va
 from pipelines.data_organizers.file_pathways import MULTI_VAR_ANALYSIS_OUTPUT_FOLDER
 
 def rm_anova_icc(*cols,id_var=ID_VAR):
+    out_dir = MULTI_VAR_ANALYSIS_OUTPUT_FOLDER
+    out_dir.mkdir(parents=True, exist_ok=True)
+    cols_title = '-'.join(cols)
+
     clean_df = load_clean()
     df = clean_impossible_var(clean_df, id_var, *cols)
 
@@ -47,9 +51,24 @@ def rm_anova_icc(*cols,id_var=ID_VAR):
         ratings='score'
     )
 
-    out_dir = MULTI_VAR_ANALYSIS_OUTPUT_FOLDER
-    out_dir.mkdir(parents=True, exist_ok=True)
-    cols_title = '-'.join(cols)
+    # Post Hoc Analysis
+    ph_corrections = [
+        'none',
+        'bonf',
+        'sidak',
+        'holm',
+        'fdr_bh',
+        'fdr_by'
+    ]
+    for c in ph_corrections:
+        posthoc = pg.pairwise_tests(
+            data=df_long,
+            dv='score',
+            within='wave',
+            subject=id_var,
+            padjust=c,
+        )
+        posthoc.to_csv(out_dir / f'{cols_title}-{c}_ph')
 
     rm_anova_result.to_csv(out_dir / f"{cols_title}-rm-anova.csv",index=False)
     icc_result.to_csv(out_dir / f"{cols_title}-icc.csv",index=False)

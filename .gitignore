@@ -28,6 +28,23 @@ build/
 *.egg
 *.egg-info
 
+# --- Jupyter ---
+.ipynb_checkpoints/
+*.ipynb
+
+# --- Testing ---
+.pytest_cache/
+htmlcov/
+.coverage
+
+# --- Logs ---
+*.log
+
+# --- Streamlit ---
+.streamlit/secrets.toml
+
+# --- Analysis outputs ---
+outputs/
 
 # Exceptions
 !diabetes.csv
