@@ -5,10 +5,11 @@ from pipelines.data_organizers.impossible_var_cleaner import endo_exo_clean_impo
 from pipelines.data_organizers.file_pathways import REGRESSION_ANALYSIS_OUTPUT_FOLDER
 
 def run_olr(endo, exo, id_var=ID_VAR):
-    df = endo_exo_clean_impossible_var(endo, *exo, id_var)
-
-    endog_series = df[endo].astype('category')
-    endog_ordered = pd.Categorical(endog_series, categories=sorted(endog_series.cat.categories), ordered=True)
+    endo_str = endo[0] if isinstance(endo, list) else endo
+    df = endo_exo_clean_impossible_var(endo_str, *exo, id_var)
+    
+    endog_series = df[endo_str].astype('category')
+    endog_ordered = pd.Categorical(endog_series, categories=sorted(endog_series.unique()), ordered=True)
 
     # Ordinal Logistic Regression
     olr_result = OrderedModel(
