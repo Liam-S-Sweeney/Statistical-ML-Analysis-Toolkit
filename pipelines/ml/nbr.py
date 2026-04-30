@@ -40,7 +40,7 @@ def run_nbr(
         )
 
     # Negative Binomial
-    result = sm.NegativeBinomial(endog=y, exog=X).fit(method='nm', maxiter=1000, disp=False)
+    result = sm.NegativeBinomial(endog=y, exog=X).fit(method='bfgs', maxiter=1000, disp=False)
 
     # Assumption checks
     warnings = []

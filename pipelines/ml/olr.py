@@ -4,9 +4,15 @@ from config import ID_VAR
 from pipelines.data_organizers.impossible_var_cleaner import endo_exo_clean_impossible_var
 from pipelines.data_organizers.file_pathways import REGRESSION_ANALYSIS_OUTPUT_FOLDER
 
-def run_olr(endo, exo, id_var=ID_VAR):
+def run_olr(endo, exo, id_var=ID_VAR):    
     endo_str = endo[0] if isinstance(endo, list) else endo
+    exo = [exo] if isinstance(exo, str) else exo
+    
     df = endo_exo_clean_impossible_var(endo_str, *exo, id_var)
+    
+    n_levels = df[endo_str].nunique()
+    if n_levels < 2:
+        raise ValueError(f"DV '{endo_str}' has only {n_levels} unique value(s) after cleaning — OLR requires at least 2.")
     
     endog_series = df[endo_str].astype('category')
     endog_ordered = pd.Categorical(endog_series, categories=sorted(endog_series.unique()), ordered=True)

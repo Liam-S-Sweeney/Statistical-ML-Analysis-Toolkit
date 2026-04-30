@@ -30,9 +30,13 @@ def run_mra(
     df = endo_exo_clean_impossible_var(endo, *exo, id_var)
 
     interaction_var = f"{focal_var}_x_{moderator_var}"
-    df[interaction_var] = df[focal_var] * df[moderator_var]
+    
+    # Mean-Centering
+    df[f'{focal_var}_c'] = df[focal_var]    - df[focal_var].mean()
+    df[f'{moderator_var}_c'] = df[moderator_var] - df[moderator_var].mean()
+    df[interaction_var] = df[f'{focal_var}_c'] * df[f'{moderator_var}_c']
 
-    X = sm.add_constant(df[[focal_var, moderator_var, interaction_var]])
+    X = sm.add_constant(df[[f'{focal_var}_c', f'{moderator_var}_c', interaction_var]])
     y = df[endo]
 
     result = sm.OLS(endog=y, exog=X).fit()
@@ -63,17 +67,17 @@ def run_mra(
         )
 
     # Simple Slopes Vars
-    b_focal = float(result.params[focal_var])
+    b_focal = float(result.params[f'{focal_var}_c'])
     b_interaction = float(result.params[interaction_var])
-    cov_focal = float(result.cov_params().loc[focal_var, focal_var])
+    cov_focal = float(result.cov_params().loc[f'{focal_var}_c', f'{focal_var}_c'])
     cov_interaction = float(result.cov_params().loc[interaction_var, interaction_var])
-    cov_cross = float(result.cov_params().loc[focal_var, interaction_var])
+    cov_cross = float(result.cov_params().loc[f'{focal_var}_c', interaction_var])
     df_resid = float(result.df_resid)
     
 
 
     # Simple Slopes Analysis
-    pv, pm = probe_vals.p_vm(df[moderator_var])
+    pv, pm = probe_vals.p_vm(df[f'{moderator_var}_c'])
     slopes_df = ssa.simple_slopes(
         b_focal=b_focal,
         b_interaction=b_interaction,
@@ -95,8 +99,8 @@ def run_mra(
         f.write(
             "\n\n--- Simple Slopes Analysis ---\n"
             f"Probe method: {pm}\n"
-            f"Focal predictor: {focal_var}\n"
-            f"Moderator: {moderator_var}\n\n"
+            f"Focal predictor: {focal_var} (mean-centered)\n"
+            f"Moderator: {moderator_var} (mean-centered; probe values in centered units)\n\n"
         )
         f.write(slopes_df.to_string(index=False))
         if warnings:

@@ -31,8 +31,8 @@ def run_chi_sqr(endo, exo, id_var=ID_VAR):
         min_dim = min(contingency_table.shape) - 1
         cramers_v = np.sqrt(chi2 / (contingency_table.values.sum() * min_dim)) if min_dim > 0 else np.nan
         cv_label = cramers_v_label(cramers_v)
-        n_cells = contingency_table.size
-        n_below_5 = (contingency_table < 5).sum()
+        n_cells = expected_freq.size
+        n_below_5 = (expected_freq < 5).sum().sum()
         pct_below_5 = n_below_5 / n_cells
 
         # Chi Output Summary

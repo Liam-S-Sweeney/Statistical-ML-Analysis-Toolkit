@@ -38,8 +38,9 @@ def gmm_analysis(*cols,dx_col=DX):
     # Apply and cumulative Full PCA
     pca_full = PCA(n_components=len(cols))
     pca_full.fit(X_scaled)
-    cumalative_full = pca_full.explained_variance_ratio_.cumsum()
-    optimal_n = np.argmax(cumalative_full >= 0.95) + 1
+    cumulative_full = pca_full.explained_variance_ratio_.cumsum()
+    optimal_n = np.argmax(cumulative_full >= 0.95) + 1
+    optimal_n = optimal_n if cumulative_full[optimal_n - 1] >= 0.95 else len(cols)
     print(f"Optimal number of components: {optimal_n}")
 
     # Apply PCA based on optimal_n
@@ -48,8 +49,8 @@ def gmm_analysis(*cols,dx_col=DX):
 
     # Plot cumulative explained variance
     plt.figure(figsize=(8,5))
-    plt.plot(range(1, len(cumalative_full) + 1), 
-             cumalative_full,
+    plt.plot(range(1, len(cumulative_full) + 1), 
+             cumulative_full,
              marker='o', linestyle='--', color='b'
              )
     plt.title('Cumulative Explained Variance by PCA Components')
@@ -71,7 +72,6 @@ def gmm_analysis(*cols,dx_col=DX):
         )
     g.map_upper(sns.kdeplot)
     output_dir = GMM_PP_VIS
-    cols_title = '-'.join(cols)
     plt.savefig(output_dir / f"{cols_title}-GMM_PP.png", dpi=300, bbox_inches='tight')
     plt.show()
 
@@ -129,7 +129,6 @@ def gmm_analysis(*cols,dx_col=DX):
 
     plt.tight_layout()
     output_dir = BIC_AIC_VIS
-    cols_title = '-'.join(cols)
     plt.savefig(output_dir / f"{cols_title}-BIC_AIC.png", dpi=300, bbox_inches='tight')
     plt.show()
 
@@ -147,17 +146,15 @@ def gmm_analysis(*cols,dx_col=DX):
     for col in best_probs.columns:
         clean_df.loc[df.index, col] = best_probs[col]
 
-    # Predict a new subject using the BEST model - DEMONSTRATION ONLY
-    new_subject = df.sample(1, random_state=0)
-    new_scaled = scaler.transform(new_subject[list(cols)])
-    new_pca = pca.transform(new_scaled)
+    # Predict a sample subject using the BEST model - DEMONSTRATION ONLY
+    sample_subject = df.sample(1, random_state=0)
+    sample_scaled = scaler.transform(sample_subject[list(cols)])
+    new_pca = pca.transform(sample_scaled)
 
     print("new_cluster:", best_gmm.predict(new_pca))
-    new_pt_cluster = best_gmm.predict(new_pca)
     print("new_prob:", best_gmm.predict_proba(new_pca))
-    new_pt_prob = best_gmm.predict_proba(new_pca)
 
-    cluster_counts = np.bincount(best_labels, minlength=best_k)
+    cluster_counts = np.bincount(best_labels.to_numpy(), minlength=best_k)
     print(f"cluster counts: {cluster_counts}")
     cluster_proportions = cluster_counts / cluster_counts.sum()
     print(f"cluster proportions: {cluster_proportions}")
@@ -180,7 +177,6 @@ def gmm_analysis(*cols,dx_col=DX):
     plt.ylabel("DX_GROUP")
     plt.xlabel("GMM cluster")
     output_dir = GMM_HM_VIS
-    cols_title = '-'.join(cols)
     plt.savefig(output_dir / f"{cols_title}-GMM_Heatmap.png", dpi=300, bbox_inches='tight')
 
     plt.show()
@@ -188,10 +184,10 @@ def gmm_analysis(*cols,dx_col=DX):
     # Quantify Alignment
     dx_arr = clean_df.loc[df.index, dx_col].to_numpy()
     mask = ~np.isnan(dx_arr)
-    print("NMI:", normalized_mutual_info_score(dx_arr[mask], best_labels[mask])) # Normalized Mutual Information
-    nmi = normalized_mutual_info_score(dx_arr[mask], best_labels[mask])
-    print("ARI:", adjusted_rand_score(dx_arr[mask], best_labels[mask])) # Adjusted Rand Index
-    ari = adjusted_rand_score(dx_arr[mask], best_labels[mask])
+    print("NMI:", normalized_mutual_info_score(dx_arr[mask], best_labels.to_numpy()[mask])) # Normalized Mutual Information
+    nmi = normalized_mutual_info_score(dx_arr[mask], best_labels.to_numpy()[mask])
+    print("ARI:", adjusted_rand_score(dx_arr[mask], best_labels.to_numpy()[mask])) # Adjusted Rand Index
+    ari = adjusted_rand_score(dx_arr[mask], best_labels.to_numpy()[mask])
     print("dx length:", len(dx), " | dx non-null:", dx.notna().sum(), " | dx unique:", dx.nunique(dropna=True))
     dx_length = len(dx)
     dx_non_null = dx.notna().sum()
@@ -200,7 +196,7 @@ def gmm_analysis(*cols,dx_col=DX):
     dx_val_counts = dx.value_counts(dropna=True)
 
     # Output DF
-    output_db = pd.DataFrame([{
+    output = pd.DataFrame([{
         'LDA CV accuracy': lda_output,
         'Optimal Number of Components': optimal_n,
         'Acceptable (cov, K) Combinations': str(acceptable_keys), 
@@ -209,14 +205,14 @@ def gmm_analysis(*cols,dx_col=DX):
         'Cluster Counts': str(cluster_counts.tolist()),
         'Cluster Proportions': str(cluster_proportions.round(3).tolist()),
         'NMI': round(nmi,3),
-        'ARI': round(ari,3),
+        'ARI': round(ari,3), 
         'DX Length': dx_length,
         'DX Non-null': dx_non_null,
         'DX Unique': dx_unique,
+        'DX Val Counts': str(dx_val_counts.to_dict()),
     }])
 
     # Output DF -> CSV
     output_dir = GMM_ANALYSIS_OUTPUT_FOLDER
-    cols_title = '-'.join(cols)
-    output_db.to_csv(output_dir / f"ml_{cols_title}-gmm_analysis.csv",index=False)
-    
+    output.to_csv(output_dir / f"ml_{cols_title}-gmm_analysis.csv",index=False)
+    return output

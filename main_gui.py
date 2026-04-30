@@ -81,7 +81,7 @@ with st.sidebar:
         st.info("Load a CSV to enable variable selection.")
 
 # --- N Var Verification ---
-def warn_min(n=2):
+def gen_min(n=2):
     if len(selected) < n:
         st.warning(f"Please select at least {n} variable{'s' if n > 1 else ''}.")
         return False
@@ -111,6 +111,18 @@ def exo_min(n=1):
         return False
     return True
 
+def mod_max(n=1):
+    if len(mod_selected) > n:
+        st.warning(f"Please select at most {n} moderator variable{'s' if n > 1 else ''}.")
+        return False
+    return True
+
+def mod_min(n=1):
+    if len(mod_selected) < n:
+        st.warning(f"Please select at least {n} moderator variable{'s' if n > 1 else ''}.")
+        return False
+    return True
+
 # --- Multivariate Analyses ---
 st.divider()
 st.subheader("Statistical Analyses")
@@ -118,13 +130,13 @@ st.subheader("Statistical Analyses")
 col_var_expl, col_rma_icc, col_chi = st.columns(3)
 with col_var_expl:
     if st.button("Uni/Multivariate Exploration", use_container_width=True):
-        if csv_available and warn_min(1):
+        if csv_available and gen_min(1):
             multivar_desc_gen.explore_multi_variables(*selected)
             st.success("Uni/Multivariate Exploration CSV Generated")
 
 with col_rma_icc:
     if st.button("RM-Anova & ICC", use_container_width=True):
-        if csv_available and warn_min(2):
+        if csv_available and gen_min(2):
             rm_anova_icc.rm_anova_icc(*selected)
             st.success("RM-Anova & ICC CSV Generated")
 
@@ -132,7 +144,7 @@ with col_chi:
     if st.button("Chi-Square Test", use_container_width=True):
         if csv_available and endo_max(1) and endo_min(1) and exo_min(1):
             result = chi_sqr.run_chi_sqr(endo=endo_selected, exo=exo_selected)
-            st.success("OLR Analysis Generated")
+            st.success("Chi-Square Test Analysis Generated")
 
 st.divider()
 
@@ -142,7 +154,7 @@ col_gmm, col_olr, col_nbr, col_ols, col_mra = st.columns(5)
 
 with col_gmm:
     if st.button("GMM Analysis", use_container_width=True):
-        if csv_available and warn_min(2):
+        if csv_available and gen_min(2):
             gmm_analysis.gmm_analysis(*selected)
             st.success("GMM Analysis Generated")
 
@@ -166,13 +178,13 @@ with col_ols:
 
 with col_mra:
     if st.button("MRA + SSA", use_container_width=True):
-        if csv_available and endo_max(1) and endo_min(1) and exo_max(1) and exo_min(1):
+        if csv_available and endo_max(1) and endo_min(1) and exo_max(1) and exo_min(1) and mod_max(1) and mod_min(1):
             result = mra.run_mra(
                 endo=endo_selected, 
                 focal_var=exo_selected, 
                 moderator_var=mod_selected,
             )
-            st.success("OLS Analysis Generated")
+            st.success("MRA Generated")
 
 
 st.divider()
@@ -183,25 +195,25 @@ col_des_vis, col_hm, col_pg, col_pp = st.columns(4)
 
 with col_des_vis:
     if st.button("Descriptive", use_container_width=True):
-        if csv_available and warn_min(2):
+        if csv_available and gen_min(2):
             desc_gen.desc_visualization(*selected)
             st.success("Descriptive Visualization Generated")
 
 with col_hm:
     if st.button("Heatmap", use_container_width=True):
-        if csv_available and warn_min(2):
+        if csv_available and gen_min(2):
             hm_gen.heatmap_visualizations(*selected)
             st.success("Heatmap Vsiualization Generated")
 
 with col_pg:
     if st.button("PairGrid", use_container_width=True):
-        if csv_available and warn_min(2):
+        if csv_available and gen_min(2):
             pg_gen.pairgrid_visualizations(*selected)
             st.success("PairGrid Vsiualization Generated")
 
 with col_pp:
     if st.button("PairPlot", use_container_width=True):
-        if csv_available and warn_min(2):
+        if csv_available and gen_min(2):
             pp_gen.pair_plot_visualizations(*selected)
             st.success("PairPlot Vsiualization Generated")
 st.divider()
