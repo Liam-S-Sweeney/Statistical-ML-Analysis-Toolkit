@@ -7,7 +7,7 @@ from pipelines.data_organizers.csv_loader import load_clean
 from pipelines.statistics import master_descriptive_gen, all_single_var_desc_gen, multivar_desc_gen, chi_sqr
 from pipelines.statistics.png_generators import desc_gen, hm_gen, pg_gen, pp_gen
 # ML
-from pipelines.ml import gmm_analysis, olr, rm_anova_icc, ols, mra, nbr
+from pipelines.ml import blr, gmm_analysis, olr, ols_mra, rm_anova_icc, ols, nbr, blr_mra
 # Data Organizers
 from pipelines.data_organizers import csv_merger, type_converter
 # Utility
@@ -150,7 +150,7 @@ st.divider()
 
 # --- ML Analyses ---
 st.subheader("ML Analyses")
-col_gmm, col_olr, col_nbr, col_ols, col_mra = st.columns(5)
+col_gmm, col_olr, col_nbr, col_blr, col_blr_mra, col_ols, col_ols_mra = st.columns(7)
 
 with col_gmm:
     if st.button("GMM Analysis", use_container_width=True):
@@ -168,7 +168,23 @@ with col_nbr:
     if st.button("NBR", use_container_width=True):
         if csv_available and endo_max(1) and endo_min(1) and exo_min(1):
             result = nbr.run_nbr(endo=endo_selected, exo=exo_selected)
-            st.success("NBR Analysis Generated")          
+            st.success("NBR Analysis Generated")         
+
+with col_blr:
+    if st.button("BLR", use_container_width=True):
+        if csv_available and endo_max(1) and endo_min(1) and exo_min(1):
+            result = blr.run_blr(endo=endo_selected, exo=exo_selected)
+            st.success("BLR Analysis Generated")   
+
+with col_blr_mra:
+    if st.button("BLR MRA + SSA", use_container_width=True):
+        if csv_available and endo_max(1) and endo_min(1) and exo_max(1) and exo_min(1) and mod_max(1) and mod_min(1):
+            result = blr_mra.run_mra(
+                endo=endo_selected, 
+                focal_var=exo_selected, 
+                moderator_var=mod_selected,
+            )
+            st.success("BLR MRA Generated")  
 
 with col_ols:
     if st.button("OLSR", use_container_width=True):
@@ -176,15 +192,15 @@ with col_ols:
             result = ols.run_ols(endo=endo_selected, exo=exo_selected)
             st.success("OLS Analysis Generated")
 
-with col_mra:
-    if st.button("MRA + SSA", use_container_width=True):
+with col_ols_mra:
+    if st.button("OLS MRA + SSA", use_container_width=True):
         if csv_available and endo_max(1) and endo_min(1) and exo_max(1) and exo_min(1) and mod_max(1) and mod_min(1):
-            result = mra.run_mra(
+            result = ols_mra.run_mra(
                 endo=endo_selected, 
                 focal_var=exo_selected, 
                 moderator_var=mod_selected,
             )
-            st.success("MRA Generated")
+            st.success("OLS MRA Generated")
 
 
 st.divider()

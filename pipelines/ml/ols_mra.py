@@ -5,7 +5,7 @@ from scipy.stats import t as t_dist
 from config import ID_VAR
 from pipelines.data_organizers.impossible_var_cleaner import endo_exo_clean_impossible_var
 from pipelines.data_organizers.file_pathways import REGRESSION_ANALYSIS_OUTPUT_FOLDER
-from pipelines.utility import ssa, probe_vals
+from pipelines.utility import ols_ssa, probe_vals
 
 def run_mra(
         endo:list,              # Y - dependent / predicted
@@ -78,7 +78,7 @@ def run_mra(
 
     # Simple Slopes Analysis
     pv, pm = probe_vals.p_vm(df[f'{moderator_var}_c'])
-    slopes_df = ssa.simple_slopes(
+    slopes_df = ols_ssa.simple_slopes(
         b_focal=b_focal,
         b_interaction=b_interaction,
         cov_focal=cov_focal,

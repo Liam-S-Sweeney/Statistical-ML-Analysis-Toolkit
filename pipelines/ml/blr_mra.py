@@ -1,0 +1,92 @@
+import statsmodels.api as sm
+from config import ID_VAR
+from pipelines.data_organizers.impossible_var_cleaner import endo_exo_clean_impossible_var
+from pipelines.data_organizers.file_pathways import REGRESSION_ANALYSIS_OUTPUT_FOLDER
+from pipelines.utility import dichotomize_count_var, log_ssa, probe_vals
+
+def run_mra(
+        endo:list,              # Y - dependent / predicted
+        focal_var: list,        # X - independent / main predictor
+        moderator_var: list,    # W - alters strength or direction of relationship between X and Y
+        id_var: str = ID_VAR
+    ):
+    """
+    Moderated regression: endo ~ focal + moderator + focal*moderator\n
+    Outputs model summary, simple slopes, and assumption checks.\n
+    \n
+    Parameters\n
+    ----------\n
+    endo        : outcome variable\n
+    focal_var   : the predictor whose effect you want to understand (e.g. pain perception)\n
+    moderator_var : the variable that changes the focal effect (e.g. executive control)\n
+    """
+    endo = endo[0] if isinstance(endo, list) else endo
+    focal_var = focal_var[0] if isinstance(focal_var, list) else focal_var
+    moderator_var = moderator_var[0] if isinstance(moderator_var, list) else moderator_var
+    exo = [focal_var, moderator_var]
+    df = endo_exo_clean_impossible_var(endo, *exo, id_var)
+    df[endo] = dichotomize_count_var.dichotomize_count_var(df[endo], var_name=endo, threshold=1)
+
+    interaction_var = f"{focal_var}_x_{moderator_var}"
+    
+    # Mean-Centering
+    df[f'{focal_var}_c'] = df[focal_var]    - df[focal_var].mean()
+    df[f'{moderator_var}_c'] = df[moderator_var] - df[moderator_var].mean()
+    df[interaction_var] = df[f'{focal_var}_c'] * df[f'{moderator_var}_c']
+
+    X = sm.add_constant(df[[f'{focal_var}_c', f'{moderator_var}_c', interaction_var]])
+    y = df[endo]
+    
+    result = sm.Logit(endog=y, exog=X).fit(method='bfgs', maxiter=1000, disp=False)
+
+    # Assumption Checks
+    warnings = []
+    # Check for complete separation
+    if result.mle_retvals.get('converged', True):
+        pct_ones = float(y.mean())
+        if pct_ones > 0.90 or pct_ones < 0.10:
+            warnings.append(
+                f"[WARNING] Severely imbalanced outcome ({pct_ones:.1%} positive). "
+                "Risk of complete separation — interpret with caution."
+            )
+
+    interaction_p = result.pvalues[interaction_var]
+    if interaction_p >= 0.05:
+        warnings.append(
+            f"[NOTE] Interaction term is non-significant (p={interaction_p:.4f}).\n"
+            "*Simple slopes are exploratory only."
+        )
+
+
+    # Simple Slopes Analysis
+    pv, pm = probe_vals.p_vm(df[f'{moderator_var}_c'])
+    slopes_df = log_ssa.simple_slopes_logistic(
+    result=result,
+    focal_var=f'{focal_var}_c',
+    moderator_var=f'{moderator_var}_c',
+    interaction_var=interaction_var,
+    probe_vals=pv,
+    df=df,
+    endo_var=endo
+    )
+
+    # Output
+    out_dir = REGRESSION_ANALYSIS_OUTPUT_FOLDER
+    out_dir.mkdir(parents=True, exist_ok=True)
+    cols_title = f'{endo}-{focal_var}-{moderator_var}-mra'
+
+    with open(out_dir / f"{cols_title}.txt", 'w') as f:
+        f.write(result.summary().as_text()) 
+        f.write(
+            "\n\n--- Simple Slopes Analysis ---\n"
+            f"Probe method: {pm}\n"
+            f"Focal predictor: {focal_var} (mean-centered)\n"
+            f"Moderator: {moderator_var} (mean-centered; probe values in centered units)\n\n"
+        )
+        f.write(slopes_df.to_string(index=False))
+        if warnings:
+            f.write("\n\n--- Assumption Checks ---\n")
+            for w in warnings:
+                f.write(f"{w}\n")
+
+    return None

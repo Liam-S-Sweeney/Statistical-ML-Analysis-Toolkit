@@ -68,7 +68,7 @@ def rm_anova_icc(*cols,id_var=ID_VAR):
             subject=id_var,
             padjust=c,
         )
-        posthoc.to_csv(out_dir / f'{cols_title}-{c}_ph')
+        posthoc.to_csv(out_dir / f'{cols_title}-{c}_ph.csv')
 
     rm_anova_result.to_csv(out_dir / f"{cols_title}-rm-anova.csv",index=False)
     icc_result.to_csv(out_dir / f"{cols_title}-icc.csv",index=False)
