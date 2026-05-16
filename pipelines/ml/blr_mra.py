@@ -30,7 +30,7 @@ def run_mra(
     interaction_var = f"{focal_var}_x_{moderator_var}"
     
     # Mean-Centering
-    df[f'{focal_var}_c'] = df[focal_var]    - df[focal_var].mean()
+    df[f'{focal_var}_c'] = df[focal_var] - df[focal_var].mean()
     df[f'{moderator_var}_c'] = df[moderator_var] - df[moderator_var].mean()
     df[interaction_var] = df[f'{focal_var}_c'] * df[f'{moderator_var}_c']
 
@@ -60,15 +60,18 @@ def run_mra(
 
     # Simple Slopes Analysis
     pv, pm = probe_vals.p_vm(df[f'{moderator_var}_c'])
-    slopes_df = log_ssa.simple_slopes_logistic(
-    result=result,
-    focal_var=f'{focal_var}_c',
-    moderator_var=f'{moderator_var}_c',
-    interaction_var=interaction_var,
-    probe_vals=pv,
-    df=df,
-    endo_var=endo
-    )
+    try:
+        slopes_df = log_ssa.simple_slopes_logistic(
+        result=result,
+        focal_var=f'{focal_var}_c',
+        moderator_var=f'{moderator_var}_c',
+        interaction_var=interaction_var,
+        probe_vals=pv,
+        df=df,
+        endo_var=endo
+        )
+    except ValueError as e:
+        return e
 
     # Output
     out_dir = REGRESSION_ANALYSIS_OUTPUT_FOLDER

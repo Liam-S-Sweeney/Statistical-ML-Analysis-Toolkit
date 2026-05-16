@@ -9,14 +9,62 @@ from sklearn.metrics import normalized_mutual_info_score, adjusted_rand_score
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.model_selection import cross_val_score
 from pipelines.data_organizers.impossible_var_cleaner import clean_impossible_var
-from config import DX
+from config import DX, DPI, K_MIN, K_MAX, N_INIT, RAND_STATE, REG_COVAR
 from pipelines.data_organizers.file_pathways import BIC_AIC_VIS, CEV_PCA_VIS, GMM_HM_VIS, GMM_PP_VIS, GMM_ANALYSIS_OUTPUT_FOLDER
 from pipelines.data_organizers.csv_loader import load_clean
 
-def gmm_analysis(*cols,dx_col=DX):
+def gmm_analysis(
+        *cols: list,
+        dx_col_: str = DX, 
+        dpi_: int = DPI,
+        k_min: int = K_MIN,
+        k_max: int = K_MAX,
+        n_init:int = N_INIT,
+        rand_state: int = RAND_STATE,
+        reg_covar: float = REG_COVAR,
+        ):
+    """
+    Gaussian Mixture Model (GMM):\n
+    - A probalistic clustering technique that models data as a combination of multiple Gaussian distributions enabling flexible grouping\n\n
+    ---\n\n
+    Assumptions:\n
+    - Gaussian Distributions\n
+    - Independent and Identically Distributed (I.I.D) Observations\n
+    - Elliptical Clusters\n
+    - Limited Outliers\n\n
+    ---\n\n
+    Parameters\n
+    ---\n
+    * cols*               : list of variables
+    * dx_col_             : diagnostic variable 
+    * dpi                 : Dots Per Inch 
+    * k_min               : Minimum k clusters
+    * k_min               : Maximum k clusters
+    * n_init              : Number of gmm initializations
+    * rand_state          : Seed used for analysis
+    * reg_covar           : Non-negative regularization added to the diagonal of covariance
+    ---\n
+    Output:\n
+    - Summary Table
+    - BIC + AIC Tables
+    - Heatmap
+    """
 
     # Initial load of csv
     clean_df = load_clean()
+
+    # Basic config checking
+    for arg_name, arg in {'dpi_':dpi_, 'n_init':n_init}.items():
+        if not isinstance(arg, int) or arg < 1:
+            raise ValueError(f'{arg_name} must be a positive integer, got {arg}\n - Check config')
+    if dx_col_ not in clean_df.columns:
+        raise ValueError(f'dx_col_ ({dx_col_}) not found in DataFrame\n - Check config')
+    if k_min < 1 or k_max <= k_min:
+        raise ValueError(f'k_min must be >= 1 and k_max must be > k_min, got k_min={k_min}, k_max={k_max}')
+    if not isinstance(rand_state, int):
+        raise ValueError(f'rand_state must be an integer, got {rand_state}\n - Check config')
+    if not isinstance(reg_covar, float):
+        raise ValueError(f'reg_covar must be a float value, got {reg_covar}\n - Check config')
 
     # build df from selected cols 
     df = clean_impossible_var(clean_df, *cols)
@@ -25,15 +73,6 @@ def gmm_analysis(*cols,dx_col=DX):
     X_df = df[list(cols)].astype(float)
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(X_df)
-
-    # LDA
-    dx_arr_full = clean_df.loc[df.index, dx_col].to_numpy()
-    mask_full = ~np.isnan(dx_arr_full)
-
-    lda = LinearDiscriminantAnalysis()
-    lda_scores = cross_val_score(lda, X_scaled[mask_full], dx_arr_full[mask_full], cv=5)
-    print(f"LDA CV accuracy: {lda_scores.mean():.3f} ± {lda_scores.std():.3f}")
-    lda_output = f'{lda_scores.mean():.3f} ± {lda_scores.std():.3f}'
 
     # Apply and cumulative Full PCA
     pca_full = PCA(n_components=len(cols))
@@ -61,9 +100,9 @@ def gmm_analysis(*cols,dx_col=DX):
 
     output_dir = CEV_PCA_VIS
     cols_title = '-'.join(cols)
-    plt.savefig(output_dir / f"{cols_title}-CEV_PCA.png", dpi=300, bbox_inches='tight')
+    plt.savefig(output_dir / f"{cols_title}-CEV_PCA.png", dpi=dpi_, bbox_inches='tight')
 
-    plt.show()
+    plt.close()
 
     # Visual Representation of standardized data
     g = sns.pairplot(
@@ -72,8 +111,8 @@ def gmm_analysis(*cols,dx_col=DX):
         )
     g.map_upper(sns.kdeplot)
     output_dir = GMM_PP_VIS
-    plt.savefig(output_dir / f"{cols_title}-GMM_PP.png", dpi=300, bbox_inches='tight')
-    plt.show()
+    g.savefig(output_dir / f"{cols_title}-GMM_PP.png", dpi=dpi_, bbox_inches='tight')
+    plt.close()
 
     # Model selection via BIC/AIC
     bic, aic = [], []
@@ -83,12 +122,12 @@ def gmm_analysis(*cols,dx_col=DX):
     cov_types = ['full', 'tied', 'diag', 'spherical']
 
     for cov in cov_types:
-        for k in range(1, 11):
+        for k in range(k_min,k_max):
             gmm_k = GaussianMixture(n_components=k, 
                                     covariance_type=cov, 
-                                    n_init=10, 
-                                    random_state=0,
-                                    reg_covar=1e-3,
+                                    n_init=n_init, 
+                                    random_state=rand_state,
+                                    reg_covar=reg_covar,
                                     )
             gmm_k.fit(X_pca)
             bic.append(gmm_k.bic(X_pca))
@@ -99,38 +138,51 @@ def gmm_analysis(*cols,dx_col=DX):
     bic = np.array(bic)
     aic = np.array(aic)
 
-    bic_min = bic.min()
-    bic_std = bic.std()
+    acceptable_keys = []
+    
+    for cov in cov_types:
+        cov_indices = [i for i, (c,k) in enumerate(all_keys) if c == cov]
+        cov_bics = bic[cov_indices]
 
-    acceptable_idx = np.where(bic <= bic_min + bic_std)[0]
-    acceptable_keys = [all_keys[i] for i in acceptable_idx]
-    print(f"Acceptable (cov, K) combinations: {acceptable_keys}")
+        cov_min = cov_bics.min()
+        cov_std = cov_bics.std()
+        threshold = cov_min + cov_std
+
+        for i in cov_indices:
+            if bic[i] <= threshold:
+                acceptable_keys.append(all_keys[i])
 
     best_idx = np.argmin(bic)
     best_cov, best_k = all_keys[best_idx]
     best_gmm = gmms[(best_cov, best_k)]
+    
+    aic_best_idx = np.argmin(aic)
+    aic_best_cov, aic_best_k = all_keys[aic_best_idx]
 
-    print(f"Best covariance: {best_cov} | Best K: {best_k}")
+    print(f"BIC: Best covariance: {best_cov} | Best K: {best_k}\n"
+          f"AIC: Best covariance: {aic_best_cov} | Best K: {aic_best_k}")
 
     # BIC/AIC Selection Visualization
     fig, axes = plt.subplots(1, 2, figsize=(14, 4))
 
+    n_k = k_max - k_min
+
     for i, cov in enumerate(cov_types):
-        sl = slice(i * 10, (i + 1) * 10)
-        axes[0].plot(range(1, 11), bic[sl], marker='o', label=cov)
-        axes[1].plot(range(1, 11), aic[sl], marker='o', label=cov)
+        sl = slice(i * n_k, (i + 1) * n_k)
+        axes[0].plot(range(k_min, k_max), bic[sl], marker='o', label=cov)
+        axes[1].plot(range(k_min, k_max), aic[sl], marker='o', label=cov)
 
     for ax, title in zip(axes, ['BIC vs K', 'AIC vs K']):
         ax.set_xlabel("K")
         ax.set_ylabel("Score (lower is better)")
         ax.set_title(title)
-        ax.set_xticks(range(1, 11))
+        ax.set_xticks(range(k_min, k_max))
         ax.legend()
 
     plt.tight_layout()
     output_dir = BIC_AIC_VIS
-    plt.savefig(output_dir / f"{cols_title}-BIC_AIC.png", dpi=300, bbox_inches='tight')
-    plt.show()
+    plt.savefig(output_dir / f"{cols_title}-BIC_AIC.png", dpi=dpi_, bbox_inches='tight')
+    plt.close()
 
     # Save clusters/probabilities from best_gmm
     best_labels = pd.Series(
@@ -160,7 +212,7 @@ def gmm_analysis(*cols,dx_col=DX):
     print(f"cluster proportions: {cluster_proportions}")
 
     # Pull diagnoses for same rows used in GMM
-    dx = clean_df.loc[df.index, dx_col]
+    dx = clean_df.loc[df.index, dx_col_]
 
     # Crosstab diagnosis x cluster
     ct = pd.crosstab(
@@ -177,12 +229,12 @@ def gmm_analysis(*cols,dx_col=DX):
     plt.ylabel("DX_GROUP")
     plt.xlabel("GMM cluster")
     output_dir = GMM_HM_VIS
-    plt.savefig(output_dir / f"{cols_title}-GMM_Heatmap.png", dpi=300, bbox_inches='tight')
+    plt.savefig(output_dir / f"{cols_title}-GMM_Heatmap.png", dpi=dpi_, bbox_inches='tight')
 
-    plt.show()
+    plt.close()
 
     # Quantify Alignment
-    dx_arr = clean_df.loc[df.index, dx_col].to_numpy()
+    dx_arr = clean_df.loc[df.index, dx_col_].to_numpy()
     mask = ~np.isnan(dx_arr)
     print("NMI:", normalized_mutual_info_score(dx_arr[mask], best_labels.to_numpy()[mask])) # Normalized Mutual Information
     nmi = normalized_mutual_info_score(dx_arr[mask], best_labels.to_numpy()[mask])
@@ -197,7 +249,6 @@ def gmm_analysis(*cols,dx_col=DX):
 
     # Output DF
     output = pd.DataFrame([{
-        'LDA CV accuracy': lda_output,
         'Optimal Number of Components': optimal_n,
         'Acceptable (cov, K) Combinations': str(acceptable_keys), 
         'Best covariance': best_cov,

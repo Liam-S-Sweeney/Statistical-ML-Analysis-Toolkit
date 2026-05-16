@@ -23,11 +23,14 @@ def simple_slopes_logistic(
         'focal_mean':         0.0,
         'focal_high (+1SD)':  focal_sd,
     }
-
-    cov = result.cov_params().loc[
-        ['const', focal_var, moderator_var, interaction_var],
-        ['const', focal_var, moderator_var, interaction_var]
-    ].values
+    try:
+        cov = result.cov_params().loc[
+            ['const', focal_var, moderator_var, interaction_var],
+            ['const', focal_var, moderator_var, interaction_var]
+        ].values
+    except ValueError:
+        raise ValueError("Covariance matrix unavailable — model likely did not converge. Check your variable distributions.")
+        
 
     rows = []
     for mod_val in probe_vals:

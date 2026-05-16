@@ -7,7 +7,7 @@ from pipelines.data_organizers.csv_loader import load_clean
 from pipelines.statistics import master_descriptive_gen, all_single_var_desc_gen, multivar_desc_gen, chi_sqr
 from pipelines.statistics.png_generators import desc_gen, hm_gen, pg_gen, pp_gen
 # ML
-from pipelines.ml import blr, gmm_analysis, olr, ols_mra, rm_anova_icc, ols, nbr, blr_mra
+from pipelines.ml import blr, gmm_analysis, lda, olr, ols_mra, rm_anova_icc, ols, nbr, blr_mra
 # Data Organizers
 from pipelines.data_organizers import csv_merger, type_converter
 # Utility
@@ -150,13 +150,19 @@ st.divider()
 
 # --- ML Analyses ---
 st.subheader("ML Analyses")
-col_gmm, col_olr, col_nbr, col_blr, col_blr_mra, col_ols, col_ols_mra = st.columns(7)
+col_gmm, col_lda, col_olr, col_nbr, col_blr, col_blr_mra, col_ols, col_ols_mra = st.columns(8)
 
 with col_gmm:
     if st.button("GMM Analysis", use_container_width=True):
         if csv_available and gen_min(2):
             gmm_analysis.gmm_analysis(*selected)
             st.success("GMM Analysis Generated")
+
+with col_lda:
+    if st.button("LDA Analysis", use_container_width=True):
+        if csv_available and gen_min(2):
+            lda.lda_model(*selected)
+            st.success("LDA Analysis Generated")
 
 with col_olr:
     if st.button("OLR", use_container_width=True):
@@ -184,7 +190,10 @@ with col_blr_mra:
                 focal_var=exo_selected, 
                 moderator_var=mod_selected,
             )
-            st.success("BLR MRA Generated")  
+            if result is not None:
+                st.error(str(result))
+            else:
+                st.success("BLR MRA Generated")  
 
 with col_ols:
     if st.button("OLSR", use_container_width=True):

@@ -12,13 +12,13 @@ def dichotomize_count_var(
     \n
     Parameters\n
     ----------\n
-    series      : raw count variable (e.g. day_al_30)\n
+    series      : raw count variable\n
     var_name    : optional name for logging purposes\n
     threshold   : values above this become 1 (default: 0, meaning any use = 1)\n
     \n
     Returns\n
     -------\n
-    pd.Series   : binary series (0 = no use, 1 = any use)\n
+    pd.Series   : binary series (0 = False, 1 = True)\n
     """
     name = var_name or series.name or "variable"
 

@@ -14,4 +14,15 @@ IMPOSSIBLE_ZERO_VARS = [
 HUE_COL = 'status'
 SIZE_COL = 'status'
 PALETTE = 'status'
-DX = 'Outcome'
+
+# GMM Specific
+DX = 'W4_day_al_30_C4'
+DPI = 300
+K_MIN = 1
+K_MAX = 11
+N_INIT = 10
+RAND_STATE = 0
+REG_COVAR = 1e-3
+
+# LDA Specific
+CV = 5
