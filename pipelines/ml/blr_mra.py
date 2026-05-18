@@ -42,13 +42,15 @@ def run_mra(
     # Assumption Checks
     warnings = []
     # Check for complete separation
-    if result.mle_retvals.get('converged', True):
-        pct_ones = float(y.mean())
-        if pct_ones > 0.90 or pct_ones < 0.10:
-            warnings.append(
-                f"[WARNING] Severely imbalanced outcome ({pct_ones:.1%} positive). "
-                "Risk of complete separation — interpret with caution."
+    pct_ones = float(y.mean())
+    if pct_ones > 0.90 or pct_ones < 0.10:
+        warnings.append(
+            f"[WARNING] Severely imbalanced outcome ({pct_ones:.1%} positive). "
+            "Risk of complete separation — interpret with caution."
             )
+
+    if not result.mle_retvals.get('converged', True):
+        warnings.append("[WARNING] Model did not converge. Interpret all results with caution.")
 
     interaction_p = result.pvalues[interaction_var]
     if interaction_p >= 0.05:

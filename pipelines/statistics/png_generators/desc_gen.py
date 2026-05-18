@@ -18,7 +18,7 @@ def desc_visualization(*cols, df=None, palette=PALETTE):
         try:
             sns.color_palette(palette, as_cmap=True)
         except:
-            pass
+            print(f'pallete called "{palette}" was not able to be added.')
 
         # Shape of Distribution per Variable
         fig, (ax_probplot, ax_hist, ax_box, ax_violin, ax_swarm) = plt.subplots(1,5, figsize=(16, 6))

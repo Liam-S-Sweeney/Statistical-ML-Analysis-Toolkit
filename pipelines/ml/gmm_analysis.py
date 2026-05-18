@@ -6,8 +6,6 @@ from sklearn.mixture import GaussianMixture
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
 from sklearn.metrics import normalized_mutual_info_score, adjusted_rand_score
-from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
-from sklearn.model_selection import cross_val_score
 from pipelines.data_organizers.impossible_var_cleaner import clean_impossible_var
 from config import DX, DPI, K_MIN, K_MAX, N_INIT, RAND_STATE, REG_COVAR
 from pipelines.data_organizers.file_pathways import BIC_AIC_VIS, CEV_PCA_VIS, GMM_HM_VIS, GMM_PP_VIS, GMM_ANALYSIS_OUTPUT_FOLDER
@@ -52,6 +50,9 @@ def gmm_analysis(
 
     # Initial load of csv
     clean_df = load_clean()
+    
+    # Adjusting for range parameters of k_max
+    k_max = k_max+1
 
     # Basic config checking
     for arg_name, arg in {'dpi_':dpi_, 'n_init':n_init}.items():
