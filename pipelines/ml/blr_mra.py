@@ -1,4 +1,6 @@
 import statsmodels.api as sm
+import pandas as pd
+from sklearn.metrics import confusion_matrix, accuracy_score
 from config import ID_VAR
 from pipelines.data_organizers.impossible_var_cleaner import endo_exo_clean_impossible_var
 from pipelines.data_organizers.file_pathways import REGRESSION_ANALYSIS_OUTPUT_FOLDER
@@ -39,6 +41,17 @@ def run_mra(
     
     result = sm.Logit(endog=y, exog=X).fit(method='bfgs', maxiter=1000, disp=False)
 
+    # Predictions + Confusion Matrix
+    yhat = result.predict(X)
+    prediction = list(map(round, yhat))
+    cm = confusion_matrix(y, prediction)
+
+    cm_df = pd.DataFrame(
+        cm,
+        index=['Actual 0', 'Actual 1'],
+        columns=['Predicted 0', 'Predicted 1']
+    )
+
     # Assumption Checks
     warnings = []
     # Check for complete separation
@@ -75,6 +88,7 @@ def run_mra(
     except ValueError as e:
         return e
 
+
     # Output
     out_dir = REGRESSION_ANALYSIS_OUTPUT_FOLDER
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -82,6 +96,12 @@ def run_mra(
 
     with open(out_dir / f"{cols_title}.txt", 'w') as f:
         f.write(result.summary().as_text()) 
+        f.write(
+            "\n\n--- Confusion Matrix ---\n"
+            f"{cm_df}\n"
+            "\n\n--- Test Accuracy ---\n"
+            f"{accuracy_score(y, prediction)}\n"
+        )
         f.write(
             "\n\n--- Simple Slopes Analysis ---\n"
             f"Probe method: {pm}\n"

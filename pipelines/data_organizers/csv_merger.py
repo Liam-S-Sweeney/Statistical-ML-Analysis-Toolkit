@@ -24,7 +24,7 @@ def merge_csv(convert_dir=UNMERGED_CSVS_FOLDER, output_path = MASTER_CSVS_FOLDER
         ]
         df_ls.append(temp)
         all_csvs_name = all_csvs_name + Path(file).stem + '_'
-     if not df_ls:
+    if not df_ls:
             raise ValueError(f"No files contained '{ID_VAR}' — check column name")
 
     from functools import reduce
