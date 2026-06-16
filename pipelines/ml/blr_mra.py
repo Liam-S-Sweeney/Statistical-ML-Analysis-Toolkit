@@ -1,6 +1,7 @@
 import statsmodels.api as sm
 import pandas as pd
 from sklearn.metrics import confusion_matrix, accuracy_score
+from statsmodels.stats.outliers_influence import variance_inflation_factor
 from config import ID_VAR
 from pipelines.data_organizers.impossible_var_cleaner import endo_exo_clean_impossible_var
 from pipelines.data_organizers.file_pathways import REGRESSION_ANALYSIS_OUTPUT_FOLDER
@@ -41,10 +42,18 @@ def run_mra(
     
     result = sm.Logit(endog=y, exog=X).fit(method='bfgs', maxiter=1000, disp=False)
 
+    # Variance Inflation Factor (VIF) Testing
+    vif_vars = [f'{focal_var}_c', f'{moderator_var}_c', interaction_var]
+    vif_matrix = df[vif_vars].values
+    vif_data = pd.DataFrame({
+        'Variable': vif_vars,
+        'VIF': [variance_inflation_factor(vif_matrix, i) for i in range(len(vif_vars))]
+    })
+
     # Predictions + Confusion Matrix
     yhat = result.predict(X)
     prediction = list(map(round, yhat))
-    cm = confusion_matrix(y, prediction)
+    cm = confusion_matrix(y, prediction , labels=[0, 1])
 
     cm_df = pd.DataFrame(
         cm,
@@ -96,6 +105,10 @@ def run_mra(
 
     with open(out_dir / f"{cols_title}.txt", 'w') as f:
         f.write(result.summary().as_text()) 
+        f.write(
+            "\n\n--- Variance Inflation Factors ---\n"
+            f"{vif_data.to_string(index=False)}\n"
+        )
         f.write(
             "\n\n--- Confusion Matrix ---\n"
             f"{cm_df}\n"
