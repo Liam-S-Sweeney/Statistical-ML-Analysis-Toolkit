@@ -11,9 +11,9 @@ IMPOSSIBLE_ZERO_VARS = [
     'BMI'
     ] 
 
-HUE_COL = 'status'
-SIZE_COL = 'status'
-PALETTE = 'status'
+HUE_COL = None
+SIZE_COL = None
+PALETTE = None
 
 # GMM Specific
 DX = 'W4_day_al_30_C4'

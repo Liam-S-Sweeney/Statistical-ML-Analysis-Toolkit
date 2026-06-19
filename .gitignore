@@ -14,7 +14,13 @@ venv/
 *.csv
 *.png
 *.sav
+*.json
+*.xlsx
+*.xls
+*.xml
 *.txt
+*.log
+
 
 # --- OS / IDE ---
 .DS_Store

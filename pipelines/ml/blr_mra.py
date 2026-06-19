@@ -29,21 +29,19 @@ def run_mra(
     exo = [focal_var, moderator_var]
     df = endo_exo_clean_impossible_var(endo, *exo, id_var)
     df[endo] = dichotomize_count_var.dichotomize_count_var(df[endo], var_name=endo, threshold=1)
-
-    interaction_var = f"{focal_var}_x_{moderator_var}"
     
     # Mean-Centering
     df[f'{focal_var}_c'] = df[focal_var] - df[focal_var].mean()
     df[f'{moderator_var}_c'] = df[moderator_var] - df[moderator_var].mean()
-    df[interaction_var] = df[f'{focal_var}_c'] * df[f'{moderator_var}_c']
+    df[f'{focal_var}_x_{moderator_var}_c'] = df[f'{focal_var}_c'] * df[f'{moderator_var}_c']
 
-    X = sm.add_constant(df[[f'{focal_var}_c', f'{moderator_var}_c', interaction_var]])
+    X = sm.add_constant(df[[f'{focal_var}_c', f'{moderator_var}_c', f'{focal_var}_x_{moderator_var}_c']])
     y = df[endo]
     
     result = sm.Logit(endog=y, exog=X).fit(method='bfgs', maxiter=1000, disp=False)
 
     # Variance Inflation Factor (VIF) Testing
-    vif_vars = [f'{focal_var}_c', f'{moderator_var}_c', interaction_var]
+    vif_vars = [f'{focal_var}_c', f'{moderator_var}_c', f'{focal_var}_x_{moderator_var}_c']
     vif_matrix = df[vif_vars].values
     vif_data = pd.DataFrame({
         'Variable': vif_vars,
@@ -71,7 +69,7 @@ def run_mra(
             "Risk of complete separation — interpret with caution."
             )
 
-    if not result.mle_retvals.get('converged', True):
+    if not result.mle_retvals.get('converged', False):
         warnings.append("[WARNING] Model did not converge. Interpret all results with caution.")
 
     interaction_p = result.pvalues[interaction_var]

@@ -1,36 +1,42 @@
-import sys
-import csv
-import json
-import os
 import pyreadstat
-import pandas as pd
-import re
+import pandas
+import logging
 from pipelines.data_organizers.file_pathways import NON_CSVS_FOLDER, UNMERGED_CSVS_FOLDER
 
 def to_csv(convert_dir=NON_CSVS_FOLDER, output_path=UNMERGED_CSVS_FOLDER):
-    print('Convert beginning')
+    logger = logging.getLogger(__name__)
+    logger.info('Convert beginning')
     for raw_file in convert_dir.iterdir():
         file_type = raw_file.suffix
         file_name = raw_file.stem
 
         if file_type == '.sav':
-            print(f'SPSS file detected: {file_name}')
+            logger.info(f'SPSS file detected: {file_name}')
             df, meta = pyreadstat.read_sav(raw_file)
             output = output_path / f"{file_name}.csv"
             df.to_csv(output, index=False)
-            print(f'Saved: {output}')
+            logger.info(f'Saved: {output}')
 
         elif file_type == '.json':
-            print('JSON file detected')
+            logger.info(f'JSON file detected: {file_name}')
+            df = pandas.read_json(raw_file)
+            output = output_path / f"{file_name}.csv"
+            df.to_csv(output, index=False)
+            logger.info(f'Saved: {output}')
 
         elif file_type in ('.xlsx', '.xls'):
-            print('Excel file detected')
+            logger.info(f'Excel file detected: {file_name}')
+            df = pandas.read_excel(raw_file)
+            output = output_path / f"{file_name}.csv"
+            df.to_csv(output, index=False)
+            logger.info(f'Saved: {output}')
 
         elif file_type == '.xml':
-            print('XML file detected')
-
-        elif file_type == '.tsv':
-            print('TSV file detected')
+            logger.info(f'XML file detected: {file_name}')
+            df = pandas.read_xml(raw_file)
+            output = output_path / f"{file_name}.csv"
+            df.to_csv(output, index=False)
+            logger.info(f'Saved: {output}')
 
         else:
-            print(f'Viable data type not detected: {file_name}')
+            logger.info(f'Viable data type not detected: {file_name}')

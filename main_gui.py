@@ -1,6 +1,7 @@
 import streamlit as st
 import os
 import time
+import logging
 from pipelines.data_organizers.file_pathways import MASTER_CSVS_FOLDER, RUNTIME_FOLDERS, MAIN_CSV
 from pipelines.data_organizers.csv_loader import load_clean
 # Statistics
@@ -31,6 +32,17 @@ if csv_available:
 else:
     df = None
     var_options = []
+
+# Log
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s | %(name)s | %(levelname)s | %(message)s",
+    datefmt="%H:%M:%S",
+    handlers=[
+        logging.StreamHandler(),
+        logging.FileHandler("toolkit.log")
+    ]
+)
 
 # --- UI ---
 st.set_page_config(
@@ -67,7 +79,7 @@ with st.sidebar:
         st.markdown("""
         <p>Independent Variables</p>
         """, unsafe_allow_html=True)
-        exo_selected = st.multiselect("Independetnt / Exogenous", var_options, label_visibility='collapsed')
+        exo_selected = st.multiselect("Independent / Exogenous", var_options, label_visibility='collapsed')
         st.divider()
 
         st.markdown("""
@@ -228,19 +240,19 @@ with col_hm:
     if st.button("Heatmap", use_container_width=True):
         if csv_available and gen_min(2):
             hm_gen.heatmap_visualizations(*selected)
-            st.success("Heatmap Vsiualization Generated")
+            st.success("Heatmap Visualization Generated")
 
 with col_pg:
     if st.button("PairGrid", use_container_width=True):
         if csv_available and gen_min(2):
             pg_gen.pairgrid_visualizations(*selected)
-            st.success("PairGrid Vsiualization Generated")
+            st.success("PairGrid Visualization Generated")
 
 with col_pp:
     if st.button("PairPlot", use_container_width=True):
         if csv_available and gen_min(2):
             pp_gen.pair_plot_visualizations(*selected)
-            st.success("PairPlot Vsiualization Generated")
+            st.success("PairPlot Visualization Generated")
 st.divider()
 
 # --- Full-Data Generators ---
@@ -258,10 +270,10 @@ with col_av_gen:
         st.success("All Variable Descriptives Generated")
 st.divider()
 
-# --- Full-Data Generators ---
+# --- Data Preparation ---
 if not csv_available:
     st.warning(f"No CSV found at `{MASTER_CSVS_FOLDER}`. Analysis features disabled — use the File Converter or CSV Merger below to prepare your data.")
-st.subheader("Full-Data Generators")
+st.subheader("Data Preparation")
 col_to_csv, col_csv_merger = st.columns(2)
 
 with col_to_csv:
