@@ -72,6 +72,8 @@ def run_mra(
     if not result.mle_retvals.get('converged', False):
         warnings.append("[WARNING] Model did not converge. Interpret all results with caution.")
 
+    interaction_var = f'{focal_var}_x_{moderator_var}_c'
+
     interaction_p = result.pvalues[interaction_var]
     if interaction_p >= 0.05:
         warnings.append(
