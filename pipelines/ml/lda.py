@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import scipy.stats as stats
+import logging
 from sklearn.preprocessing import StandardScaler
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.metrics import confusion_matrix
@@ -13,7 +14,7 @@ from pipelines.data_organizers.csv_loader import load_clean
 from pipelines.data_organizers.file_pathways import LDA_HM_VIS, LDA_OUTPUT_FOLDER
 
 def lda_model(
-        *cols: list,
+        *cols: str,
         dx_col_:str = DX, 
         cv_:int = CV,
         dpi_:int = DPI,
@@ -38,6 +39,8 @@ def lda_model(
     - Summary Table
     - Confusion Matrix Heatmap
     """
+    # Log 
+    logger = logging.getLogger(__name__)
 
     # Initial load of csv
     clean_df = load_clean()
@@ -92,7 +95,7 @@ def lda_model(
         evr = None
 
     # Class priors
-    print(f"\nClass Priors: { {int(c): round(p, 3) for c, p in zip(lda.classes_, lda.priors_)} }")
+    logger.info(f"\nClass Priors: { {int(c): round(p, 3) for c, p in zip(lda.classes_, lda.priors_)} }")
 
     # Confusion Matrix via cross_val_predict
     y_pred = cross_val_predict(lda, X_masked, y_masked, cv=cv_)

@@ -7,7 +7,7 @@ from pipelines.data_organizers.impossible_var_cleaner import endo_exo_clean_impo
 from pipelines.data_organizers.file_pathways import REGRESSION_ANALYSIS_OUTPUT_FOLDER
 from pipelines.utility import ols_ssa, probe_vals
 
-def run_mra(
+def run_mols(
         endo:list,              # Y - dependent / predicted
         focal_var: list,        # X - independent / main predictor
         moderator_var: list,    # W - alters strength or direction of relationship between X and Y

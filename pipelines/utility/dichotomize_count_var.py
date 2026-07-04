@@ -1,5 +1,6 @@
 import pandas as pd
 import numpy as np
+import logging
 
 
 def dichotomize_count_var(
@@ -20,6 +21,7 @@ def dichotomize_count_var(
     -------\n
     pd.Series   : binary series (0 = False, 1 = True)\n
     """
+    logger = logging.getLogger(__name__)
     name = var_name or series.name or "variable"
 
     # Validate input is count data
@@ -45,7 +47,7 @@ def dichotomize_count_var(
     n_no_use = n_total - n_any_use
     pct_use = n_any_use / n_total * 100
 
-    print(
+    logger.info(
         f"[DICHOTOMIZE] '{name}' | "
         f"threshold > {threshold} | "
         f"N = {n_total} | "
