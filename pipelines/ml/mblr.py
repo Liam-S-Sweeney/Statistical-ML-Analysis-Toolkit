@@ -2,16 +2,17 @@ import statsmodels.api as sm
 import pandas as pd
 from sklearn.metrics import confusion_matrix, accuracy_score
 from statsmodels.stats.outliers_influence import variance_inflation_factor
-from config import ID_VAR
+from config import ID_VAR, DATA_THRESHOLD
 from pipelines.data_organizers.impossible_var_cleaner import endo_exo_clean_impossible_var
 from pipelines.data_organizers.file_pathways import REGRESSION_ANALYSIS_OUTPUT_FOLDER
 from pipelines.utility import dichotomize_count_var, log_ssa, probe_vals
 
-def run_mra(
+def run_mblr(
         endo:list,              # Y - dependent / predicted
         focal_var: list,        # X - independent / main predictor
         moderator_var: list,    # W - alters strength or direction of relationship between X and Y
-        id_var: str = ID_VAR
+        id_var: str = ID_VAR,
+        data_threshold: int = DATA_THRESHOLD
     ):
     """
     Moderated regression: endo ~ focal + moderator + focal*moderator\n
@@ -28,7 +29,9 @@ def run_mra(
     moderator_var = moderator_var[0] if isinstance(moderator_var, list) else moderator_var
     exo = [focal_var, moderator_var]
     df = endo_exo_clean_impossible_var(endo, *exo, id_var)
-    df[endo] = dichotomize_count_var.dichotomize_count_var(df[endo], var_name=endo, threshold=1)
+
+    # Dichotomize vars based on config threshold
+    df[endo] = dichotomize_count_var.dichotomize_count_var(df[endo], var_name=endo, threshold=data_threshold)
     
     # Mean-Centering
     df[f'{focal_var}_c'] = df[focal_var] - df[focal_var].mean()

@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import logging
 from sklearn.mixture import GaussianMixture
 from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition import PCA
@@ -12,7 +13,7 @@ from pipelines.data_organizers.file_pathways import BIC_AIC_VIS, CEV_PCA_VIS, GM
 from pipelines.data_organizers.csv_loader import load_clean
 
 def gmm_analysis(
-        *cols: list,
+        *cols: str,
         dx_col_: str = DX, 
         dpi_: int = DPI,
         k_min: int = K_MIN,
@@ -50,6 +51,9 @@ def gmm_analysis(
 
     # Initial load of csv
     clean_df = load_clean()
+
+    # Logging
+    logger = logging.getLogger(__name__)
     
     # Adjusting for range parameters of k_max
     k_max = k_max+1
@@ -81,7 +85,7 @@ def gmm_analysis(
     cumulative_full = pca_full.explained_variance_ratio_.cumsum()
     optimal_n = np.argmax(cumulative_full >= 0.95) + 1
     optimal_n = optimal_n if cumulative_full[optimal_n - 1] >= 0.95 else len(cols)
-    print(f"Optimal number of components: {optimal_n}")
+    logger.info(f"Optimal number of components: {optimal_n}")
 
     # Apply PCA based on optimal_n
     pca = PCA(n_components=optimal_n)
@@ -160,7 +164,7 @@ def gmm_analysis(
     aic_best_idx = np.argmin(aic)
     aic_best_cov, aic_best_k = all_keys[aic_best_idx]
 
-    print(f"BIC: Best covariance: {best_cov} | Best K: {best_k}\n"
+    logger.info(f"BIC: Best covariance: {best_cov} | Best K: {best_k}\n"
           f"AIC: Best covariance: {aic_best_cov} | Best K: {aic_best_k}")
 
     # BIC/AIC Selection Visualization
@@ -204,13 +208,13 @@ def gmm_analysis(
     sample_scaled = scaler.transform(sample_subject[list(cols)])
     new_pca = pca.transform(sample_scaled)
 
-    print("new_cluster:", best_gmm.predict(new_pca))
-    print("new_prob:", best_gmm.predict_proba(new_pca))
+    logger.info("new_cluster:", best_gmm.predict(new_pca))
+    logger.info("new_prob:", best_gmm.predict_proba(new_pca))
 
     cluster_counts = np.bincount(best_labels.to_numpy(), minlength=best_k)
-    print(f"cluster counts: {cluster_counts}")
+    logger.info(f"cluster counts: {cluster_counts}")
     cluster_proportions = cluster_counts / cluster_counts.sum()
-    print(f"cluster proportions: {cluster_proportions}")
+    logger.info(f"cluster proportions: {cluster_proportions}")
 
     # Pull diagnoses for same rows used in GMM
     dx = clean_df.loc[df.index, dx_col_]
@@ -221,7 +225,7 @@ def gmm_analysis(
         best_labels,
         normalize="index"
         )
-    print(ct)
+    logger.info(ct)
 
     # Heatmap
     plt.figure(figsize=(8,5))
@@ -237,15 +241,15 @@ def gmm_analysis(
     # Quantify Alignment
     dx_arr = clean_df.loc[df.index, dx_col_].to_numpy()
     mask = ~np.isnan(dx_arr)
-    print("NMI:", normalized_mutual_info_score(dx_arr[mask], best_labels.to_numpy()[mask])) # Normalized Mutual Information
+    logger.info("NMI:", normalized_mutual_info_score(dx_arr[mask], best_labels.to_numpy()[mask])) # Normalized Mutual Information
     nmi = normalized_mutual_info_score(dx_arr[mask], best_labels.to_numpy()[mask])
-    print("ARI:", adjusted_rand_score(dx_arr[mask], best_labels.to_numpy()[mask])) # Adjusted Rand Index
+    logger.info("ARI:", adjusted_rand_score(dx_arr[mask], best_labels.to_numpy()[mask])) # Adjusted Rand Index
     ari = adjusted_rand_score(dx_arr[mask], best_labels.to_numpy()[mask])
-    print("dx length:", len(dx), " | dx non-null:", dx.notna().sum(), " | dx unique:", dx.nunique(dropna=True))
+    logger.info("dx length:", len(dx), " | dx non-null:", dx.notna().sum(), " | dx unique:", dx.nunique(dropna=True))
     dx_length = len(dx)
     dx_non_null = dx.notna().sum()
     dx_unique = dx.nunique(dropna=True)
-    print("dx value counts:\n", dx.value_counts(dropna=False).head(10))
+    logger.info("dx value counts:\n", dx.value_counts(dropna=False).head(10))
     dx_val_counts = dx.value_counts(dropna=True)
 
     # Output DF

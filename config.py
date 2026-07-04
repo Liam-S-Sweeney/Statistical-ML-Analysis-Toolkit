@@ -1,3 +1,7 @@
+"""
+UPDATE THIS TO NO LONGER BE ABOUT LAB VVV
+"""
+
 MAIN_CSV_NAME = 'SB_W3_W1_W2_W3_W4_merged_raw.csv'
 
 ID_VAR = 'ID1C'
@@ -14,6 +18,9 @@ IMPOSSIBLE_ZERO_VARS = [
 HUE_COL = None
 SIZE_COL = None
 PALETTE = None
+
+# MRA Specific
+DATA_THRESHOLD = 1
 
 # GMM Specific
 DX = 'W4_day_al_30_C4'
