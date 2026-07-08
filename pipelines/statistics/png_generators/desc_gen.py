@@ -2,11 +2,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import scipy.stats as stats
+import logging
 from pipelines.data_organizers.csv_loader import load_clean
 from config import PALETTE
 from pipelines.data_organizers.file_pathways import DESC_VIS
 
 def desc_visualization(*cols, df=None, palette=PALETTE):
+    logger = logging.getLogger(__name__)
     if df is None:
         df = load_clean()
     for col in cols:
@@ -18,7 +20,7 @@ def desc_visualization(*cols, df=None, palette=PALETTE):
         try:
             sns.color_palette(palette, as_cmap=True)
         except:
-            print(f'pallete called "{palette}" was not able to be added.')
+            logger.warning(f'pallete called "{palette}" was not able to be added.')
 
         # Shape of Distribution per Variable
         fig, (ax_probplot, ax_hist, ax_box, ax_violin, ax_swarm) = plt.subplots(1,5, figsize=(16, 6))

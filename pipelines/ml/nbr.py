@@ -1,5 +1,6 @@
 import numpy as np
 import statsmodels.api as sm
+import logging
 from config import ID_VAR
 from pipelines.data_organizers.impossible_var_cleaner import endo_exo_clean_impossible_var
 from pipelines.data_organizers.file_pathways import REGRESSION_ANALYSIS_OUTPUT_FOLDER
@@ -15,16 +16,17 @@ def run_nbr(
     - Used to model count data where the variance is higher than the mean\n
     Outputs model summary and assumption checks
     """
+    logger = logging.getLogger(__name__)
     endo_var = endo[0] if isinstance(endo, list) else endo
 
     df = endo_exo_clean_impossible_var(endo_var, *exo, id_var)
     X = sm.add_constant(df[exo])
     y = df[endo_var]
 
-    print(y.describe())
-    print(y.unique())
-    print("Negative values:", (y < 0).sum())
-    print("Non-integers:", (y != y.astype(int)).sum())
+    logger.debug(y.describe())
+    logger.debug(y.unique())
+    logger.debug("Negative values:", (y < 0).sum())
+    logger.debug("Non-integers:", (y != y.astype(int)).sum())
 
     # Validate outcome is appropriate for NB
     if (y < 0).any():

@@ -5,7 +5,7 @@ import logging
 
 def dichotomize_count_var(
     series: pd.Series,
-    var_name: str = None,
+    var_name: str='variable',
     threshold: int = 0
 ) -> pd.Series:
     """

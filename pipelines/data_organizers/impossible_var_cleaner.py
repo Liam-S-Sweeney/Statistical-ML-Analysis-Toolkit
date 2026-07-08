@@ -1,13 +1,21 @@
 import numpy as np
+import pandas as pd
 import logging
 from config import IMPOSSIBLE_ZERO_VARS
 from pipelines.data_organizers.csv_loader import load_clean
+from typing import Sequence
 
-def clean_impossible_var(clean_df, *cols, impossible_zero_vars=IMPOSSIBLE_ZERO_VARS):
+def clean_impossible_var(
+    clean_df: pd.DataFrame,
+    *cols: str,
+    impossible_zero_vars: Sequence[str] = IMPOSSIBLE_ZERO_VARS,
+    ):
+    """
+    Replaces all specified variables that contain any "0" values that do not make sense with Nan.
+    """
     logger = logging.getLogger(__name__)
-    df = clean_df[list(cols)].copy()
     
-    df = df.dropna(how='any')
+    df = clean_df[list(cols)].copy()
 
     impossible_zero_cols = [c for c in impossible_zero_vars if c in df.columns]
     for col in impossible_zero_cols:

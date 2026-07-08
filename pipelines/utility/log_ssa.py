@@ -13,9 +13,8 @@ def simple_slopes_logistic(
     endo_var: str
 ) -> pd.DataFrame:
     """
-    Simple Slopes Analysis for Logistic MRA.\n
-    Tests whether the focal predictor slope is significant\n
-    at each probe value of the moderator.\n
+    Simple Slopes Analysis for Logistic MRA:\n
+    Tests whether the focal predictor slope is significant at each probe value of the moderator.\n
     """
     focal_sd = float(df[focal_var].std())
     focal_probes = {

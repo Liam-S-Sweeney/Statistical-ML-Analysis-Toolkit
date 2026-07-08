@@ -8,7 +8,7 @@ from pipelines.data_organizers.csv_loader import load_clean
 from pipelines.statistics import master_descriptive_gen, all_single_var_desc_gen, multivar_desc_gen, chi_sqr
 from pipelines.statistics.png_generators import desc_gen, hm_gen, pg_gen, pp_gen
 # ML
-from pipelines.ml import blr, gmm_analysis, lda, olr, ols_mra, rm_anova_icc, ols, nbr, blr_mra
+from pipelines.ml import blr, gmm_analysis, lda, mblr, mols, olr, rm_anova_icc, ols, nbr
 # Data Organizers
 from pipelines.data_organizers import csv_merger, type_converter
 # Utility
@@ -197,7 +197,7 @@ with col_blr:
 with col_blr_mra:
     if st.button("BLR MRA + SSA", use_container_width=True):
         if csv_available and endo_max(1) and endo_min(1) and exo_max(1) and exo_min(1) and mod_max(1) and mod_min(1):
-            result = blr_mra.run_mra(
+            result = mblr.run_mblr(
                 endo=endo_selected, 
                 focal_var=exo_selected, 
                 moderator_var=mod_selected,
@@ -216,7 +216,7 @@ with col_ols:
 with col_ols_mra:
     if st.button("OLS MRA + SSA", use_container_width=True):
         if csv_available and endo_max(1) and endo_min(1) and exo_max(1) and exo_min(1) and mod_max(1) and mod_min(1):
-            result = ols_mra.run_mra(
+            result = mols.run_mols(
                 endo=endo_selected, 
                 focal_var=exo_selected, 
                 moderator_var=mod_selected,

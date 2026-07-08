@@ -15,3 +15,6 @@ include = ["pipelines*", "config*"]
 
 [tool.setuptools]
 py-modules = ["config", "main"]
+
+[project.optional-dependencies]
+dev = ["pytest"]

@@ -8,7 +8,7 @@ from pipelines.data_organizers.file_pathways import REGRESSION_ANALYSIS_OUTPUT_F
 from pipelines.utility import dichotomize_count_var, log_ssa, probe_vals
 
 def run_mblr(
-        endo:list,              # Y - dependent / predicted
+        endo: list,              # Y - dependent / predicted
         focal_var: list,        # X - independent / main predictor
         moderator_var: list,    # W - alters strength or direction of relationship between X and Y
         id_var: str = ID_VAR,
@@ -20,9 +20,9 @@ def run_mblr(
     \n
     Parameters\n
     ----------\n
-    endo        : outcome variable\n
-    focal_var   : the predictor whose effect you want to understand (e.g. pain perception)\n
-    moderator_var : the variable that changes the focal effect (e.g. executive control)\n
+    endo            : outcome variable\n
+    focal_var       : the predictor whose effect you want to understand (e.g. pain perception)\n
+    moderator_var   : the variable that changes the focal effect (e.g. executive control)\n
     """
     endo = endo[0] if isinstance(endo, list) else endo
     focal_var = focal_var[0] if isinstance(focal_var, list) else focal_var

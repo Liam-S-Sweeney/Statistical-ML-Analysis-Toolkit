@@ -4,37 +4,46 @@ Version: 0.1.0
 Summary: A toolkit for statistical machine learning
 Requires-Python: >=3.8
 Description-Content-Type: text/markdown
+Provides-Extra: dev
+Requires-Dist: pytest; extra == "dev"
 
-# Statistical & ML Analysis Toolkit 🧠
+# Statistical & ML Analysis Toolkit
 
-A Python-based GUI toolkit for statistical and machine learning analysis, built on Streamlit. Designed for clinical and longitudinal research data, with a focus on messy, real-world datasets.
+A Streamlit-based GUI for end-to-end statistical and machine learning analysis. Designed for researchers working with tabular CSV data, the toolkit chains data ingestion, cleaning, analysis, and visualization into a single point-and-click interface — no scripting required at runtime.
 
-Developed by [Liam Sweeney](https://github.com/Liam-S-Sweeney)
+Developed by Liam Sweeney.
 
 ---
 
 ## Features
 
 ### Statistical Analyses
-- **Uni/Multivariate Exploration** — descriptive statistics across one or more selected variables
-- **Repeated Measures ANOVA & ICC** — within-subject analysis across waves via `pingouin`, paired as a single analysis unit
+- **Uni/Multivariate Exploration** — descriptive statistics and distributional summaries across one or more variables, exported to CSV
+- **Repeated Measures ANOVA & ICC** — within-subjects ANOVA via `pingouin`, with intraclass correlation and six post-hoc correction methods (Bonferroni, Šidák, Holm, FDR-BH, FDR-BY, uncorrected)
+- **Chi-Square Test** — association testing between categorical dependent and independent variables
 
 ### ML Analyses
-- **Gaussian Mixture Model (GMM)** — unsupervised clustering with automatic model selection via BIC/AIC across covariance types and K values; includes PCA dimensionality reduction, LDA cross-validation, NMI/ARI alignment scoring, and cluster probability output
-- **Ordinal Logistic Regression (OLR)** — for ordinal dependent variables, fit via maximum likelihood with logit link
-- **Ordinary Least Squares (OLS) Regression** — for continuous dependent variables with standard diagnostics
+- **Gaussian Mixture Model (GMM)** — unsupervised clustering with automated model selection; fits all four covariance types (`full`, `tied`, `diag`, `spherical`) across K = 1–10 and selects the best configuration via BIC (1-SD rule); outputs NMI, ARI, cluster proportions, and LDA cross-validated accuracy
+- **Ordinary Least Squares Regression (OLSR)** — linear regression with residual diagnostics
+- **OLS Moderated Regression Analysis (MRA) + Simple Slopes** — mean-centered interaction modeling with Breusch-Pagan heteroscedasticity check and simple slope probing at ±1 SD
+- **Binary Logistic Regression (BLR)** — logistic regression with auto-dichotomization, odds ratios with 95% CIs, McFadden pseudo-R², and assumption warnings (class imbalance, events-per-predictor)
+- **BLR Moderated Regression Analysis (MRA) + Simple Slopes** — interaction modeling on a binary outcome with the same simple slopes framework as OLS MRA
+- **Ordinal Logistic Regression (OLR)** — for ordered categorical outcomes
+- **Negative Binomial Regression (NBR)** — for overdispersed count outcomes
 
 ### Data Visualizations
-- **Descriptive Visualization** — distribution plots per variable
-- **Heatmap Visualization** — correlation heatmap across selected variables
-- **PairGrid Visualization** — pairwise grid plots
-- **PairPlot Visualization** — pairwise scatter + KDE plots
+- **Descriptive** — distribution plots per selected variable
+- **Heatmap** — correlation heatmap across selected variables
+- **PairGrid** — pairwise relationship grid with KDE overlays
+- **PairPlot** — seaborn pairplot with KDE on diagonals
 
 ### Full-Data Generators
-- **Master Descriptive CSV Generator** — descriptive statistics for every variable in the dataset
-- **All Variable Descriptives Generator** — individual descriptive outputs per variable
-- **File Type Converter** — converts non-CSV files (e.g. `.sav`) to CSV
-- **CSV Merger** — merges all CSVs in the `unmerged_csvs/` folder into a single master CSV
+- **Master Descriptive CSV Generator** — one summary CSV covering all variables in the dataset
+- **All Variable Descriptives Generator** — per-variable descriptive CSVs for the full dataset
+
+### Data Utilities
+- **File Type Converter** — converts non-CSV files (e.g., SPSS `.sav`) to CSV
+- **CSV Merger** — merges all CSVs placed in `files/unmerged_csvs/` into a single master CSV
 
 ---
 
@@ -42,23 +51,33 @@ Developed by [Liam Sweeney](https://github.com/Liam-S-Sweeney)
 
 ```
 Statistical-ML-Analysis-Toolkit/
-├── main_gui.py                        # Streamlit GUI entry point
-├── config.py                          # Dataset configuration
+├── main_gui.py                         # Streamlit app entry point
+├── config.py                           # Dataset-specific configuration
 ├── requirements.txt
+├── pyproject.toml
 ├── app_styles/
 │   ├── load_css.py
 │   └── main.css
 ├── files/
-│   ├── master_csvs/                   # Place your dataset here
-│   ├── unmerged_csvs/                 # CSVs to be merged
-│   └── non_csvs/                      # Non-CSV files for conversion
+│   ├── master_csvs/                    # Place your primary CSV here
+│   ├── unmerged_csvs/                  # CSVs to be merged
+│   └── non_csvs/                       # Non-CSV files for conversion
 ├── outputs/
 │   ├── all_var_desc_analysis_output/
-│   ├── figure_pngs_output/            # All generated visualizations
 │   ├── gmm_analysis_output/
 │   ├── master_var_desc_output/
-│   ├── multi_var_analysis_output/     # RM-ANOVA & ICC outputs
-│   └── regression_analysis_output/   # OLR & OLS outputs
+│   ├── multi_var_analysis_output/
+│   ├── regression_analysis_output/
+│   └── figure_pngs_output/
+│       ├── bic_aic_vis/
+│       ├── cev_pca/
+│       ├── cev_pca_vis/
+│       ├── desc_vis/
+│       ├── gmm_hm_vis/
+│       ├── gmm_pp_vis/
+│       ├── hm_vis/
+│       ├── pg_vis/
+│       └── pp_vis/
 └── pipelines/
     ├── data_organizers/
     │   ├── csv_loader.py
@@ -67,13 +86,18 @@ Statistical-ML-Analysis-Toolkit/
     │   ├── impossible_var_cleaner.py
     │   └── type_converter.py
     ├── ml/
+    │   ├── blr.py
+    │   ├── blr_mra.py
     │   ├── gmm_analysis.py
+    │   ├── nbr.py
     │   ├── olr.py
     │   ├── ols.py
+    │   ├── ols_mra.py
     │   └── rm_anova_icc.py
     ├── statistics/
-    │   ├── master_descriptive_gen.py
     │   ├── all_single_var_desc_gen.py
+    │   ├── chi_sqr.py
+    │   ├── master_descriptive_gen.py
     │   ├── multivar_desc_gen.py
     │   └── png_generators/
     │       ├── desc_gen.py
@@ -81,91 +105,110 @@ Statistical-ML-Analysis-Toolkit/
     │       ├── pg_gen.py
     │       └── pp_gen.py
     └── utility/
-        └── cdfs.py
+        ├── cdfs.py
+        ├── dichotomize_count_var.py
+        ├── log_ssa.py
+        ├── ols_ssa.py
+        ├── overlap_checker.py
+        └── probe_vals.py
 ```
 
 ---
 
 ## Setup
 
-### 1. Clone the repository
+**Requirements:** Python ≥ 3.8
+
 ```bash
 git clone https://github.com/Liam-S-Sweeney/Statistical-ML-Analysis-Toolkit.git
 cd Statistical-ML-Analysis-Toolkit
-```
-
-### 2. Create and activate a virtual environment
-```bash
-python -m venv venv
-# Windows
-venv\Scripts\activate
-# Mac/Linux
-source venv/bin/activate
-```
-
-### 3. Install dependencies
-```bash
 pip install -r requirements.txt
 ```
 
-### 4. Configure your dataset
+### Configure for your dataset
 
-Edit `config.py`:
+Edit `config.py` before running:
 
 ```python
-MAIN_CSV_NAME = 'your_dataset.csv'   # filename of your CSV
-ID_VAR = 'subject_id'                # subject/participant ID column
-MISSING_CODES = [-99, -999, -9999]   # values to treat as missing
-IMPOSSIBLE_ZERO_VARS = []            # columns where 0 is physiologically impossible
-DX = 'diagnosis_column'              # diagnostic label column for GMM
+MAIN_CSV_NAME = 'your_data.csv'       # Filename of your primary CSV
+ID_VAR = 'SubjectID'                   # Subject/row identifier column
+MISSING_CODES = [-99, -999, -9999]     # Values to treat as missing
+IMPOSSIBLE_ZERO_VARS = ['VarA', ...]   # Variables where 0 is physiologically impossible
+HUE_COL = 'group'                      # Grouping variable for visualizations
+DX = 'Outcome'                         # Diagnostic/outcome column for GMM alignment
 ```
 
-Place your dataset in `files/master_csvs/`.
+### Load your data
 
-### 5. Launch the app
+Place your primary CSV in `files/master_csvs/`. If you have multiple CSVs to merge, place them in `files/unmerged_csvs/` and use the **CSV Merger** button in the app. Non-CSV files (e.g., SPSS `.sav`) go in `files/non_csvs/` and can be converted via the **File Type Converter**.
+
+---
+
+## Running the App
+
 ```bash
 streamlit run main_gui.py
 ```
 
----
-
-## Usage
-
-**Variable Selection (Sidebar)**
-- **General Variables** — used for descriptive stats, GMM, RM-ANOVA, and visualizations
-- **Dependent Variables** — endogenous variable for OLR and OLS (select one)
-- **Independent Variables** — exogenous predictors for OLR and OLS
-
-**Running Analyses**
-
-Select variables in the sidebar, then click the corresponding button in the main panel. All outputs are saved automatically to the relevant subfolder in `outputs/`.
+The app will open in your browser. All outputs are saved automatically to the appropriate subdirectory under `outputs/`.
 
 ---
 
-## Data Notes
+## Variable Selection
 
-- Missing values are handled automatically using the codes defined in `config.py`
-- Variables listed in `IMPOSSIBLE_ZERO_VARS` have zero values replaced with NaN before analysis
-- The CSV Merger supports longitudinal data with wave-prefixed column naming (e.g. `W1_varname`, `W2_varname`)
-- RM-ANOVA and ICC require variables representing the same measure across multiple timepoints/waves
+The sidebar exposes four variable slots used by different analyses:
+
+| Slot | Role |
+|---|---|
+| **General Variables** | Used by exploration, RM-ANOVA, GMM, and visualization analyses |
+| **Dependent Variables** | Outcome/endogenous variable for regression models |
+| **Independent Variables** | Predictor/exogenous variables for regression models |
+| **Moderator Variable** | Interaction term for MRA pipelines |
+
+The app validates slot usage per analysis (e.g., BLR enforces exactly 1 dependent variable) and flags overlap across slots before running.
+
+---
+
+## Output Files
+
+All outputs are written to `outputs/` and organized by analysis type:
+
+| Analysis | Output Location | Format |
+|---|---|---|
+| GMM | `gmm_analysis_output/` | CSV + PNGs (BIC/AIC, CEV-PCA, heatmap, pairplot) |
+| Regression (BLR, OLR, OLS, NBR) | `regression_analysis_output/` | `.txt` summary files |
+| MRA + Simple Slopes | `regression_analysis_output/` | `.txt` summary files |
+| RM-ANOVA & ICC | `multi_var_analysis_output/` | CSV per correction method |
+| Multivariate Exploration | `multi_var_analysis_output/` | CSV |
+| Master Descriptives | `master_var_desc_output/` | CSV |
+| All Variable Descriptives | `all_var_desc_analysis_output/` | CSV |
+| Visualizations | `figure_pngs_output/<type>/` | PNG (300 DPI) |
 
 ---
 
 ## Dependencies
 
-- `pandas`, `numpy`, `scipy`
-- `statsmodels` — OLR, OLS
-- `scikit-learn` — GMM, PCA, LDA, StandardScaler
-- `pingouin` — RM-ANOVA, ICC
-- `matplotlib`, `seaborn` — visualizations
-- `pyreadstat` — `.sav` file conversion
-- `streamlit` — GUI
+```
+pandas
+numpy
+matplotlib
+seaborn
+scipy
+statsmodels
+scikit-learn
+imbalanced-learn
+pingouin
+pyreadstat
+streamlit
+```
+
+Install all via `pip install -r requirements.txt`.
 
 ---
 
-## Roadmap
+## Notes
 
-- [ ] Supervised ML — Logistic Regression, Random Forest
-- [ ] Multilevel Modeling (MLM) with wide-to-long reshape pipeline
-- [ ] PyTorch integration
-- [ ] SOLID/class-based refactor into a proper package structure
+- The GMM pipeline applies PCA before clustering, retaining components that explain ≥ 95% of variance. Model selection uses the BIC 1-SD rule across all covariance structures and K values.
+- MRA pipelines mean-center predictors and moderators before computing the interaction term to reduce multicollinearity.
+- BLR auto-dichotomizes count DVs (any occurrence vs. none) and emits warnings for class imbalance and insufficient events-per-predictor.
+- Missing value codes defined in `config.py` are recoded to `NaN` at load time. Variables listed in `IMPOSSIBLE_ZERO_VARS` have zero values treated as missing prior to analysis.

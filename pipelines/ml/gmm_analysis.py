@@ -203,14 +203,6 @@ def gmm_analysis(
     for col in best_probs.columns:
         clean_df.loc[df.index, col] = best_probs[col]
 
-    # Predict a sample subject using the BEST model - DEMONSTRATION ONLY
-    sample_subject = df.sample(1, random_state=0)
-    sample_scaled = scaler.transform(sample_subject[list(cols)])
-    new_pca = pca.transform(sample_scaled)
-
-    logger.info("new_cluster:", best_gmm.predict(new_pca))
-    logger.info("new_prob:", best_gmm.predict_proba(new_pca))
-
     cluster_counts = np.bincount(best_labels.to_numpy(), minlength=best_k)
     logger.info(f"cluster counts: {cluster_counts}")
     cluster_proportions = cluster_counts / cluster_counts.sum()
@@ -241,15 +233,19 @@ def gmm_analysis(
     # Quantify Alignment
     dx_arr = clean_df.loc[df.index, dx_col_].to_numpy()
     mask = ~np.isnan(dx_arr)
-    logger.info("NMI:", normalized_mutual_info_score(dx_arr[mask], best_labels.to_numpy()[mask])) # Normalized Mutual Information
+
     nmi = normalized_mutual_info_score(dx_arr[mask], best_labels.to_numpy()[mask])
-    logger.info("ARI:", adjusted_rand_score(dx_arr[mask], best_labels.to_numpy()[mask])) # Adjusted Rand Index
+    logger.info(f"NMI: {nmi}")
+
     ari = adjusted_rand_score(dx_arr[mask], best_labels.to_numpy()[mask])
-    logger.info("dx length:", len(dx), " | dx non-null:", dx.notna().sum(), " | dx unique:", dx.nunique(dropna=True))
+    logger.info(f"ARI: {ari}")
+
+    logger.info(f"dx length: {len(dx)} | dx non-null: {dx.notna().sum()} | dx unique: {dx.nunique(dropna=True)}")
     dx_length = len(dx)
     dx_non_null = dx.notna().sum()
     dx_unique = dx.nunique(dropna=True)
-    logger.info("dx value counts:\n", dx.value_counts(dropna=False).head(10))
+
+    logger.info(f"dx value counts:\n{dx.value_counts(dropna=False).head(10)}")
     dx_val_counts = dx.value_counts(dropna=True)
 
     # Output DF
