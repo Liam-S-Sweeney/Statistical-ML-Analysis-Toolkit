@@ -1,5 +1,6 @@
 import statsmodels.api as sm
 import pandas as pd
+import numpy as np
 from sklearn.metrics import confusion_matrix, accuracy_score
 from statsmodels.stats.outliers_influence import variance_inflation_factor
 from config import ID_VAR, DATA_THRESHOLD
@@ -8,9 +9,9 @@ from pipelines.data_organizers.file_pathways import REGRESSION_ANALYSIS_OUTPUT_F
 from pipelines.utility import dichotomize_count_var, log_ssa, probe_vals
 
 def run_mblr(
-        endo: list,              # Y - dependent / predicted
-        focal_var: list,        # X - independent / main predictor
-        moderator_var: list,    # W - alters strength or direction of relationship between X and Y
+        endo: str | list[str],             # Y - dependent / predicted
+        focal_var: str | list[str],        # X - independent / main predictor
+        moderator_var: str | list[str],    # W - alters strength or direction of relationship between X and Y
         id_var: str = ID_VAR,
         data_threshold: int = DATA_THRESHOLD
     ):
@@ -41,7 +42,15 @@ def run_mblr(
     X = sm.add_constant(df[[f'{focal_var}_c', f'{moderator_var}_c', f'{focal_var}_x_{moderator_var}_c']])
     y = df[endo]
     
-    result = sm.Logit(endog=y, exog=X).fit(method='bfgs', maxiter=1000, disp=False)
+    # Attempt Logistic Regression for 'result'
+    try:
+        result = sm.Logit(endog=y, exog=X).fit(method='bfgs', maxiter=1000, disp=False)
+    except Exception as e:
+        out_dir = REGRESSION_ANALYSIS_OUTPUT_FOLDER
+        out_dir.mkdir(parents=True, exist_ok=True)
+        with open(out_dir / f"{endo}-{focal_var}-{moderator_var}-mra.txt", 'w', encoding='utf-8') as f:
+            f.write(f"[MRA ERROR] Model failed: {e}\n")
+        return None
 
     # Variance Inflation Factor (VIF) Testing
     vif_vars = [f'{focal_var}_c', f'{moderator_var}_c', f'{focal_var}_x_{moderator_var}_c']
@@ -62,18 +71,26 @@ def run_mblr(
         columns=['Predicted 0', 'Predicted 1']
     )
 
+    # EPP Calculations
+    n_events = int(y.sum())
+    n_nonevents = int(len(y) - n_events)
+    k = X.shape[1] - 1                      # exclude constant
+    epp = min(n_events, n_nonevents) / k    # Peduzzi convention: minority class
+
+
+
     # Assumption Checks
     warnings = []
     # Check for complete separation
     pct_ones = float(y.mean())
-    if pct_ones > 0.90 or pct_ones < 0.10:
+    if pct_ones > 0.90:
         warnings.append(
             f"[WARNING] Severely imbalanced outcome ({pct_ones:.1%} positive). "
-            "Risk of complete separation — interpret with caution."
+            "Risk of complete separation — interpret with caution.\n"
             )
 
     if not result.mle_retvals.get('converged', False):
-        warnings.append("[WARNING] Model did not converge. Interpret all results with caution.")
+        warnings.append("[WARNING] Model did not converge. Interpret all results with caution.\n")
 
     interaction_var = f'{focal_var}_x_{moderator_var}_c'
 
@@ -81,32 +98,53 @@ def run_mblr(
     if interaction_p >= 0.05:
         warnings.append(
             f"[NOTE] Interaction term is non-significant (p={interaction_p:.4f}).\n"
-            "*Simple slopes are exploratory only."
+            "*Simple slopes are exploratory only.\n"
+        )
+
+    if epp < 5:
+        warnings.append(
+            f"[WARNING] EPP = {epp:.1f} (events = {n_events}, predictors = {k}). "
+            "Below minimum of 5 for stable ML estimation — treat as non-estimable.\n"
+        )
+    elif epp < 10:
+        warnings.append(
+            f"[NOTE] EPP = {epp:.1f} (events = {n_events}, predictors = {k}). "
+            "Below conventional threshold of 10; estimates exploratory.\n"
         )
 
 
-    # Simple Slopes Analysis
+    # Empirical Separation Detection
+    max_se = np.nanmax(result.bse) if np.isfinite(result.bse).any() else np.inf
+    separated = (not np.isfinite(result.bse).all()) or (max_se > 10) or (result.prsquared > 0.99)
+    if separated:
+        warnings.append(
+            f"[WARNING] Evidence of complete/quasi-complete separation "
+            f"(max SE = {max_se:.1f}, pseudo R² = {result.prsquared:.3f}).\n"
+        )
+
+    # Simple Slopes Analysis (only for estimable models)
+    slopes_df = None
     pv, pm = probe_vals.p_vm(df[f'{moderator_var}_c'])
-    try:
-        slopes_df = log_ssa.simple_slopes_logistic(
-        result=result,
-        focal_var=f'{focal_var}_c',
-        moderator_var=f'{moderator_var}_c',
-        interaction_var=interaction_var,
-        probe_vals=pv,
-        df=df,
-        endo_var=endo
-        )
-    except ValueError as e:
-        return e
-
+    if epp >= 5 and not separated:
+        try:
+            slopes_df = log_ssa.simple_slopes_logistic(
+                result=result,
+                focal_var=f'{focal_var}_c',
+                moderator_var=f'{moderator_var}_c',
+                interaction_var=interaction_var,
+                probe_vals=pv,
+                df=df,
+            )
+        except Exception as e:
+            slopes_df = None
+            warnings.append(f"[WARNING] Simple slopes computation failed: {e}\n")
 
     # Output
     out_dir = REGRESSION_ANALYSIS_OUTPUT_FOLDER
     out_dir.mkdir(parents=True, exist_ok=True)
     cols_title = f'{endo}-{focal_var}-{moderator_var}-mra'
 
-    with open(out_dir / f"{cols_title}.txt", 'w') as f:
+    with open(out_dir / f"{cols_title}.txt", 'w', encoding='utf-8') as f:
         f.write(result.summary().as_text()) 
         f.write(
             "\n\n--- Variance Inflation Factors ---\n"
@@ -118,13 +156,18 @@ def run_mblr(
             "\n\n--- Test Accuracy ---\n"
             f"{accuracy_score(y, prediction)}\n"
         )
-        f.write(
-            "\n\n--- Simple Slopes Analysis ---\n"
-            f"Probe method: {pm}\n"
-            f"Focal predictor: {focal_var} (mean-centered)\n"
-            f"Moderator: {moderator_var} (mean-centered; probe values in centered units)\n\n"
-        )
-        f.write(slopes_df.to_string(index=False))
+        if slopes_df is not None:
+            f.write(
+                "\n\n--- Simple Slopes Analysis ---\n"
+                f"Probe method: {pm}\n"
+                f"Focal predictor: {focal_var} (mean-centered)\n"
+                f"Moderator: {moderator_var} (mean-centered; probe values in centered units)\n\n"
+            )
+            f.write(slopes_df.to_string(index=False))
+        else:
+            f.write("\n\n--- Simple Slopes Analysis ---\n")
+            f.write("SSA suppressed: model non-estimable or slope computation failed (see Assumption Checks).\n")
+        f.write(f"\nEPP: {epp:.1f} (events = {n_events}, predictors = {k})")
         if warnings:
             f.write("\n\n--- Assumption Checks ---\n")
             for w in warnings:

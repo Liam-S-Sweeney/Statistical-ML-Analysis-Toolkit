@@ -7,8 +7,8 @@ from pipelines.data_organizers.file_pathways import REGRESSION_ANALYSIS_OUTPUT_F
 from pipelines.utility.dichotomize_count_var import dichotomize_count_var
 
 def run_blr(
-    endo: list,
-    exo: list,
+    endo: list | list[str],
+    exo: list | list[str],
     id_var: str = ID_VAR
 ):
     """
@@ -40,25 +40,32 @@ def run_blr(
             "Dichotomize before running BLR (0 = no use, 1 = any use)."
         )
 
+    # EPP Calculations
+    n_events = int(y.sum())
+    n_nonevents = int(len(y) - n_events)
+    k = X.shape[1] - 1                      # exclude constant
+    epp = min(n_events, n_nonevents) / k    # Peduzzi convention: minority class
+
     # Assumption checks
     warnings = []
     pct_ones = float(y.mean())
-    pct_zeros = 1 - pct_ones
 
-    if pct_ones < 0.10 or pct_ones > 0.90:
+    if pct_ones > 0.90:
         warnings.append(
             f"[WARNING] Outcome is severely imbalanced "
             f"({pct_ones:.1%} positive).\n"
             "Odds ratios may be unstable — interpret with caution."
         )
 
-    n = len(y)
-    n_predictors = len(exo)
-    events_per_predictor = (min(pct_ones, pct_zeros) * n) / n_predictors
-    if events_per_predictor < 10:
+    if epp < 5:
         warnings.append(
-            f"[WARNING] Events per predictor = {events_per_predictor:.1f} "
-            "(threshold: 10). Model may be underpowered."
+            f"[WARNING] EPP = {epp:.1f} (events = {n_events}, predictors = {k}). "
+            "Below minimum of 5 for stable ML estimation — treat as non-estimable.\n"
+        )
+    elif epp < 10:
+        warnings.append(
+            f"[NOTE] EPP = {epp:.1f} (events = {n_events}, predictors = {k}). "
+            "Below conventional threshold of 10; estimates exploratory.\n"
         )
 
     # Fit BLR
@@ -70,8 +77,8 @@ def run_blr(
         )
     except Exception as e:
         with open(
-            REGRESSION_ANALYSIS_OUTPUT_FOLDER /
-            f"{'-'.join([endo_var] + exo)}-blr.txt", 'w'
+            REGRESSION_ANALYSIS_OUTPUT_FOLDER
+            / f"{'-'.join([endo_var] + exo)}-blr.txt", 'w', encoding='utf-8'
         ) as f:
             f.write(f"[BLR ERROR] Model failed: {str(e)}\n")
         return None
@@ -87,7 +94,7 @@ def run_blr(
     out_dir.mkdir(parents=True, exist_ok=True)
     cols_title = '-'.join([endo_var] + exo)
 
-    with open(out_dir / f"{cols_title}-blr.txt", 'w') as f:
+    with open(out_dir / f"{cols_title}-blr.txt", 'w', encoding='utf-8') as f:
         f.write(result.summary().as_text())
         f.write("\n\nOdds Ratios (exp(coef)) with 95% CIs:\n")
         f.write(or_df.to_string())
@@ -97,6 +104,7 @@ def run_blr(
         f.write(f"Pseudo R-squared (McFadden): {round(result.prsquared, 3)}\n")
         f.write(f"Log-Likelihood: {round(result.llf, 3)}\n")
         f.write(f"LLR p-value: {round(result.llr_pvalue, 4)}\n")
+        f.write(f"\nEPP: {epp:.1f} (events = {n_events}, predictors = {k})")
         if warnings:
             f.write("\n\nAssumption Checks:\n")
             for w in warnings:

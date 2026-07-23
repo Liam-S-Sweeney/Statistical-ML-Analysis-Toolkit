@@ -10,7 +10,6 @@ def simple_slopes_logistic(
     interaction_var: str,
     probe_vals: list,
     df: pd.DataFrame,
-    endo_var: str
 ) -> pd.DataFrame:
     """
     Simple Slopes Analysis for Logistic MRA:\n
