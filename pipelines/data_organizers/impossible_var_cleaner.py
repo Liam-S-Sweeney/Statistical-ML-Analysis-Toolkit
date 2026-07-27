@@ -9,9 +9,10 @@ def clean_impossible_var(
     clean_df: pd.DataFrame,
     *cols: str,
     impossible_zero_vars: Sequence[str] = IMPOSSIBLE_ZERO_VARS,
+    replace_val: int = 0,
     ):
     """
-    Replaces all specified variables that contain any "0" values that do not make sense with Nan.
+    Replaces all specified variables that contain any replacement value ("0" by default) that do not make sense with Nan.
     """
     logger = logging.getLogger(__name__)
     
@@ -22,14 +23,21 @@ def clean_impossible_var(
         proportion = (df[col] == 0).mean()
         if proportion > 0:
             logger.info(f"{col}: {proportion:.1%} zeros detected — replacing with NaN")
-            df[col] = df[col].replace(0, np.nan)
+            df[col] = df[col].replace(replace_val, np.nan)
 
     df = df.dropna(subset=list(cols), how='any')
     
     logger.info(f"Final df shape after cleaning: {df.shape}")
     return df
 
-def endo_exo_clean_impossible_var(*cols, clean_df=None, impossible_zero_vars=IMPOSSIBLE_ZERO_VARS):
+def endo_exo_clean_impossible_var(*cols, 
+    clean_df=None, 
+    impossible_zero_vars=IMPOSSIBLE_ZERO_VARS,
+    replace_val: int = 0,
+    ):
+    """
+    Replaces all specified variables that contain any replacement value ("0" by default) that do not make sense with Nan.
+    """
     logger = logging.getLogger(__name__)
     if clean_df is None:
         clean_df = load_clean()
@@ -49,7 +57,7 @@ def endo_exo_clean_impossible_var(*cols, clean_df=None, impossible_zero_vars=IMP
         proportion = (df[col] == 0).mean()
         if proportion > 0:
             logger.info(f"{col}: {proportion:.1%} zeros detected — replacing with NaN")
-            df[col] = df[col].replace(0, np.nan)
+            df[col] = df[col].replace(replace_val, np.nan)
     
     df = df.replace([np.inf, -np.inf], np.nan)
     df = df.dropna(subset=flats_cols, how='any')

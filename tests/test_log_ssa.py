@@ -42,7 +42,7 @@ def fake_df():
 def test_simple_slope_matches_hand_calc(known_model, fake_df):
     out = simple_slopes_logistic(
         result=known_model, focal_var='X_c', moderator_var='W_c',
-        interaction_var='X_x_W_c', probe_vals=[1.0], df=fake_df, endo_var='endo',
+        interaction_var='X_x_W_c', probe_vals=[1.0], df=fake_df,
     )
     row = out.iloc[0]
     assert row['simple_slope'] == pytest.approx(1.0, abs=1e-4)
@@ -56,7 +56,7 @@ def test_simple_slope_matches_hand_calc(known_model, fake_df):
 def test_slope_constant_across_focal_levels(known_model, fake_df):
     out = simple_slopes_logistic(
         result=known_model, focal_var='X_c', moderator_var='W_c',
-        interaction_var='X_x_W_c', probe_vals=[1.0], df=fake_df, endo_var='endo',
+        interaction_var='X_x_W_c', probe_vals=[1.0], df=fake_df,
     )
     assert out['simple_slope'].nunique() == 1
     assert out['se_slope'].nunique() == 1
@@ -65,6 +65,6 @@ def test_slope_constant_across_focal_levels(known_model, fake_df):
 def test_zero_moderator_gives_focal_coefficient(known_model, fake_df):
     out = simple_slopes_logistic(
         result=known_model, focal_var='X_c', moderator_var='W_c',
-        interaction_var='X_x_W_c', probe_vals=[0.0], df=fake_df, endo_var='endo',
+        interaction_var='X_x_W_c', probe_vals=[0.0], df=fake_df,
     )
     assert out.iloc[0]['simple_slope'] == pytest.approx(0.8, abs=1e-4)

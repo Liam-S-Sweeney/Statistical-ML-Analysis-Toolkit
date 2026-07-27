@@ -2,7 +2,7 @@
 UPDATE THIS TO NO LONGER BE ABOUT LAB VVV
 """
 
-MAIN_CSV_NAME = 'SB_W3_W1_W2_W3_W4_merged_raw.csv'
+MAIN_CSV_NAME = 'SB_W1_W2_W3_W4_merged_raw.csv'
 
 ID_VAR = 'ID1C'
 
