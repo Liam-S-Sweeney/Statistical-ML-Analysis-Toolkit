@@ -1,12 +1,14 @@
-import statsmodels.api as sm
-import pandas as pd
 import numpy as np
-from sklearn.metrics import confusion_matrix, accuracy_score
+import pandas as pd
+import statsmodels.api as sm
+from sklearn.metrics import accuracy_score, confusion_matrix
 from statsmodels.stats.outliers_influence import variance_inflation_factor
-from config import ID_VAR, DATA_THRESHOLD
-from pipelines.data_organizers.impossible_var_cleaner import endo_exo_clean_impossible_var
+
+from config import DATA_THRESHOLD, ID_VAR
 from pipelines.data_organizers.file_pathways import REGRESSION_ANALYSIS_OUTPUT_FOLDER
+from pipelines.data_organizers.impossible_var_cleaner import endo_exo_clean_impossible_var
 from pipelines.utility import dichotomize_count_var, log_ssa, probe_vals
+
 
 def run_mblr(
         endo: str | list[str],             # Y - dependent / predicted
@@ -33,7 +35,7 @@ def run_mblr(
 
     # Dichotomize vars based on config threshold
     df[endo] = dichotomize_count_var.dichotomize_count_var(df[endo], var_name=endo, threshold=data_threshold)
-    
+
     # Mean-Centering
     df[f'{focal_var}_c'] = df[focal_var] - df[focal_var].mean()
     df[f'{moderator_var}_c'] = df[moderator_var] - df[moderator_var].mean()
@@ -41,7 +43,7 @@ def run_mblr(
 
     X = sm.add_constant(df[[f'{focal_var}_c', f'{moderator_var}_c', f'{focal_var}_x_{moderator_var}_c']])
     y = df[endo]
-    
+
     # Attempt Logistic Regression for 'result'
     try:
         result = sm.Logit(endog=y, exog=X).fit(method='bfgs', maxiter=1000, disp=False)
@@ -145,7 +147,7 @@ def run_mblr(
     cols_title = f'{endo}-{focal_var}-{moderator_var}-mra'
 
     with open(out_dir / f"{cols_title}.txt", 'w', encoding='utf-8') as f:
-        f.write(result.summary().as_text()) 
+        f.write(result.summary().as_text())
         f.write(
             "\n\n--- Variance Inflation Factors ---\n"
             f"{vif_data.to_string(index=False)}\n"

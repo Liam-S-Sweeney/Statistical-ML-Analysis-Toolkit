@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd
 import scipy.stats as stats
 
+
 def compute_descriptives_for_series(series: pd.Series, name: str, position: int) -> dict:
     non_na = pd.to_numeric(series, errors='coerce').dropna()
     values = non_na.to_numpy(dtype=float) if not non_na.empty else np.array([])
@@ -24,7 +25,7 @@ def compute_descriptives_for_series(series: pd.Series, name: str, position: int)
     # central tendency
     out["mean"] = round(non_na.mean(),3)
     out["median"] = round(non_na.median(),3)
-    
+
     m = non_na.mode()
     out["mode"] = m.iloc[0] if not m.empty else np.nan
 

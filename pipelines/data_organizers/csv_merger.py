@@ -1,8 +1,11 @@
-import pandas as pd
 import logging
 from pathlib import Path
+
+import pandas as pd
+
 from config import ID_VAR
-from pipelines.data_organizers.file_pathways import UNMERGED_CSVS_FOLDER, MASTER_CSVS_FOLDER
+from pipelines.data_organizers.file_pathways import MASTER_CSVS_FOLDER, UNMERGED_CSVS_FOLDER
+
 
 def merge_csv(convert_dir=UNMERGED_CSVS_FOLDER, output_path = MASTER_CSVS_FOLDER):
     logger = logging.getLogger(__name__)

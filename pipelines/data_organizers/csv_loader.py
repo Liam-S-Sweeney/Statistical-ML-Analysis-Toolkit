@@ -1,7 +1,9 @@
-import pandas as pd
 import numpy as np
+import pandas as pd
+
 from config import MISSING_CODES
 from pipelines.data_organizers.file_pathways import MAIN_CSV
+
 
 def load_raw(path=MAIN_CSV) -> pd.DataFrame:
     """Load raw dataset."""

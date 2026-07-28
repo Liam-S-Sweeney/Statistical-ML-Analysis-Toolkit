@@ -1,18 +1,20 @@
 import numpy as np
 import pandas as pd
 from scipy.stats import chi2_contingency
+
 from config import ID_VAR
-from pipelines.data_organizers.impossible_var_cleaner import endo_exo_clean_impossible_var
 from pipelines.data_organizers.file_pathways import MULTI_VAR_ANALYSIS_OUTPUT_FOLDER
+from pipelines.data_organizers.impossible_var_cleaner import endo_exo_clean_impossible_var
+
 
 def cramers_v_label(v):
-    if np.isnan(v):   
+    if np.isnan(v):
         return np.nan
-    elif v < 0.10:      
+    elif v < 0.10:
         return 'negligible'
-    elif v < 0.20:      
+    elif v < 0.20:
         return 'small'
-    elif v < 0.40:      
+    elif v < 0.40:
         return 'medium'
     else:
         return 'large'
@@ -45,7 +47,7 @@ def run_chi_sqr(endo, exo, id_var=ID_VAR):
             'pct_cells_below_5': round(pct_below_5, 4),
             'assumption_met': pct_below_5 <= 0.20,
         }])
-        
+
         expected_df = pd.DataFrame(
         expected_freq,
         index=contingency_table.index,

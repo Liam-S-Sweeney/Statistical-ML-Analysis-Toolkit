@@ -1,8 +1,6 @@
-import numpy as np
-import pandas as pd
 import pytest
-from pipelines.utility.ols_ssa import simple_slopes
 
+from pipelines.utility.ols_ssa import simple_slopes
 
 # Same coefficients/covariance as the logistic test so slope & SE are directly
 # comparable and hand-verifiable; df_resid fixed at 196.

@@ -1,10 +1,13 @@
-import pingouin as pg
-import pandas as pd
 import logging
-from pipelines.data_organizers.csv_loader import load_clean
+
+import pandas as pd
+import pingouin as pg
+
 from config import ID_VAR
-from pipelines.data_organizers.impossible_var_cleaner import clean_impossible_var
+from pipelines.data_organizers.csv_loader import load_clean
 from pipelines.data_organizers.file_pathways import MULTI_VAR_ANALYSIS_OUTPUT_FOLDER
+from pipelines.data_organizers.impossible_var_cleaner import clean_impossible_var
+
 
 def rm_anova_icc(*cols,id_var=ID_VAR):
     logger = logging.getLogger(__name__)
@@ -33,7 +36,7 @@ def rm_anova_icc(*cols,id_var=ID_VAR):
     if df_long.empty:
         logger.info("No subjects with complete data across all selected waves.")
         return
-    
+
     logger.info(f'Subjects with complete data: {df_long[id_var].nunique()}')
 
     # RM Anova
@@ -74,4 +77,4 @@ def rm_anova_icc(*cols,id_var=ID_VAR):
 
     rm_anova_result.to_csv(out_dir / f"{cols_title}-rm-anova.csv",index=False)
     icc_result.to_csv(out_dir / f"{cols_title}-icc.csv",index=False)
-    return 
+    return

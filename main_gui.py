@@ -1,21 +1,31 @@
-import streamlit as st
+import logging
 import os
 import time
-import logging
-from pipelines.data_organizers.file_pathways import MASTER_CSVS_FOLDER, RUNTIME_FOLDERS, MAIN_CSV
-from pipelines.data_organizers.csv_loader import load_clean
-# Statistics
-from pipelines.statistics import master_descriptive_gen, all_single_var_desc_gen, multivar_desc_gen, chi_sqr
-from pipelines.statistics.png_generators import desc_gen, hm_gen, pg_gen, pp_gen
-# ML
-from pipelines.ml import blr, gmm_analysis, lda, mblr, mols, olr, rm_anova_icc, ols, nbr
-# Data Organizers
-from pipelines.data_organizers import csv_merger, type_converter
-# Utility
-from pipelines.utility import overlap_checker
+
+import streamlit as st
+
 # Styles
 from app_styles import load_css
 
+# Data Organizers
+from pipelines.data_organizers import csv_merger, type_converter
+from pipelines.data_organizers.csv_loader import load_clean
+from pipelines.data_organizers.file_pathways import MAIN_CSV, MASTER_CSVS_FOLDER, RUNTIME_FOLDERS
+
+# ML
+from pipelines.ml import blr, gmm_analysis, lda, mblr, mols, nbr, olr, ols, rm_anova_icc
+
+# Statistics
+from pipelines.statistics import (
+    all_single_var_desc_gen,
+    chi_sqr,
+    master_descriptive_gen,
+    multivar_desc_gen,
+)
+from pipelines.statistics.png_generators import desc_gen, hm_gen, pg_gen, pp_gen
+
+# Utility
+from pipelines.utility import overlap_checker
 
 # --- Setup ---
 for folder in RUNTIME_FOLDERS:
@@ -46,8 +56,8 @@ logging.basicConfig(
 
 # --- UI ---
 st.set_page_config(
-    page_title="Statistical & ML Toolkit", 
-    page_icon="🧠", 
+    page_title="Statistical & ML Toolkit",
+    page_icon="🧠",
     layout="wide",
     initial_sidebar_state="auto",
                    )
@@ -75,7 +85,7 @@ with st.sidebar:
         """, unsafe_allow_html=True)
         endo_selected = st.multiselect("Dependent / Endogenous", var_options, label_visibility='collapsed')
         st.divider()
-        
+
         st.markdown("""
         <p>Independent Variables</p>
         """, unsafe_allow_html=True)
@@ -186,26 +196,26 @@ with col_nbr:
     if st.button("NBR", use_container_width=True):
         if csv_available and endo_max(1) and endo_min(1) and exo_min(1):
             result = nbr.run_nbr(endo=endo_selected, exo=exo_selected)
-            st.success("NBR Analysis Generated")         
+            st.success("NBR Analysis Generated")
 
 with col_blr:
     if st.button("BLR", use_container_width=True):
         if csv_available and endo_max(1) and endo_min(1) and exo_min(1):
             result = blr.run_blr(endo=endo_selected, exo=exo_selected)
-            st.success("BLR Analysis Generated")   
+            st.success("BLR Analysis Generated")
 
 with col_blr_mra:
     if st.button("BLR MRA + SSA", use_container_width=True):
         if csv_available and endo_max(1) and endo_min(1) and exo_max(1) and exo_min(1) and mod_max(1) and mod_min(1):
             result = mblr.run_mblr(
-                endo=endo_selected, 
-                focal_var=exo_selected, 
+                endo=endo_selected,
+                focal_var=exo_selected,
                 moderator_var=mod_selected,
             )
             if result is not None:
                 st.error(str(result))
             else:
-                st.success("BLR MRA Generated")  
+                st.success("BLR MRA Generated")
 
 with col_ols:
     if st.button("OLSR", use_container_width=True):
@@ -217,8 +227,8 @@ with col_ols_mra:
     if st.button("OLS MRA + SSA", use_container_width=True):
         if csv_available and endo_max(1) and endo_min(1) and exo_max(1) and exo_min(1) and mod_max(1) and mod_min(1):
             result = mols.run_mols(
-                endo=endo_selected, 
-                focal_var=exo_selected, 
+                endo=endo_selected,
+                focal_var=exo_selected,
                 moderator_var=mod_selected,
             )
             st.success("OLS MRA Generated")

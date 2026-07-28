@@ -1,9 +1,11 @@
 import statsmodels.api as sm
+from scipy import stats
 from statsmodels.regression.linear_model import OLS
 from statsmodels.stats.diagnostic import het_breuschpagan
-from scipy import stats
-from pipelines.data_organizers.impossible_var_cleaner import endo_exo_clean_impossible_var
+
 from pipelines.data_organizers.file_pathways import REGRESSION_ANALYSIS_OUTPUT_FOLDER
+from pipelines.data_organizers.impossible_var_cleaner import endo_exo_clean_impossible_var
+
 
 def run_ols(endo, exo):
     df = endo_exo_clean_impossible_var(endo, *exo)
@@ -20,7 +22,7 @@ def run_ols(endo, exo):
     sw_stat, sw_p = stats.shapiro(ols_result.resid)
     if sw_p < 0.05:
         warnings.append(f"[WARNING] --> Residuals are non-normal (Shapiro-Wilk p={round(float(sw_p), 4)})")
-    
+
     bp_lm, bp_lm_p, bp_f, bp_fp = het_breuschpagan(ols_result.resid, X)
     if bp_lm_p < 0.05:
         warnings.append(f"[WARNING] --> Heteroscedasticity detected (Breusch-Pagan p={round(float(bp_lm_p), 4)})")

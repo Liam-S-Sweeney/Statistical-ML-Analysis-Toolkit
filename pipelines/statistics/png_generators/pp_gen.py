@@ -1,17 +1,19 @@
 import matplotlib.pyplot as plt
 import seaborn as sns
+
+from config import HUE_COL, PALETTE, SIZE_COL
 from pipelines.data_organizers.csv_loader import load_clean
-from config import HUE_COL, SIZE_COL, PALETTE
-from pipelines.data_organizers.impossible_var_cleaner import clean_impossible_var
 from pipelines.data_organizers.file_pathways import PP_VIS
+from pipelines.data_organizers.impossible_var_cleaner import clean_impossible_var
+
 
 def pair_plot_visualizations(*cols, hue_col=HUE_COL, size_col=SIZE_COL, palette=PALETTE):
 
-    clean_df = load_clean() 
+    clean_df = load_clean()
 
-    # build df from selected cols 
+    # build df from selected cols
     df = clean_impossible_var(clean_df, *cols)
-    
+
     if len(cols) < 2:
         raise ValueError("Select at least two variables.")
 
@@ -19,19 +21,19 @@ def pair_plot_visualizations(*cols, hue_col=HUE_COL, size_col=SIZE_COL, palette=
     if hue_col in clean_df.columns:
         df[hue_col] = clean_df[hue_col]
     else:
-        hue_col = None  
+        hue_col = None
 
     if size_col in clean_df.columns:
         df[size_col] = clean_df[size_col]
     else:
         size_col = None
-    
+
     # attempt to add a palette
     try:
         sns.color_palette(palette, as_cmap=True)
     except:
         pass
-    
+
     # ---- Pairplot ----
     if hue_col and hue_col in clean_df.columns:
         df[hue_col] = clean_df[hue_col]
@@ -39,12 +41,12 @@ def pair_plot_visualizations(*cols, hue_col=HUE_COL, size_col=SIZE_COL, palette=
 
         sns.pairplot(
             data=df,
-            hue=hue_to_use,     
+            hue=hue_to_use,
             kind="reg"
         )
     else:
         sns.pairplot(
-                data=df,     
+                data=df,
                 kind="reg"
             )
 

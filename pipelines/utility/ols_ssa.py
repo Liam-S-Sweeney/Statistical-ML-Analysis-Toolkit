@@ -2,8 +2,9 @@ import numpy as np
 import pandas as pd
 from scipy.stats import t as t_dist
 
+
 def simple_slopes(
-        b_focal: float,             
+        b_focal: float,
         b_interaction: float,
         cov_focal: float,
         cov_interaction: float,
@@ -20,9 +21,9 @@ def simple_slopes(
     rows=[]
 
     for z_val in probe_vals:
-        slope = b_focal + b_interaction * z_val 
+        slope = b_focal + b_interaction * z_val
         var_slope = cov_focal + 2 * z_val * cov_cross + z_val**2 * cov_interaction
-        
+
         se = np.sqrt(max(var_slope, 0))
         t_stat = slope / se
         p_val = float(t_dist.sf(np.abs(t_stat), df=df_resid) * 2)

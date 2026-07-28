@@ -1,11 +1,12 @@
 import scipy.stats as stats
 import statsmodels.api as sm
 from statsmodels.stats.diagnostic import het_breuschpagan
-from scipy.stats import t as t_dist
+
 from config import ID_VAR
-from pipelines.data_organizers.impossible_var_cleaner import endo_exo_clean_impossible_var
 from pipelines.data_organizers.file_pathways import REGRESSION_ANALYSIS_OUTPUT_FOLDER
+from pipelines.data_organizers.impossible_var_cleaner import endo_exo_clean_impossible_var
 from pipelines.utility import ols_ssa, probe_vals
+
 
 def run_mols(
         endo:list,              # Y - dependent / predicted
@@ -30,7 +31,7 @@ def run_mols(
     df = endo_exo_clean_impossible_var(endo, *exo, id_var)
 
     interaction_var = f"{focal_var}_x_{moderator_var}"
-    
+
     # Mean-Centering
     df[f'{focal_var}_c'] = df[focal_var]    - df[focal_var].mean()
     df[f'{moderator_var}_c'] = df[moderator_var] - df[moderator_var].mean()
@@ -73,7 +74,7 @@ def run_mols(
     cov_interaction = float(result.cov_params().loc[interaction_var, interaction_var])
     cov_cross = float(result.cov_params().loc[f'{focal_var}_c', interaction_var])
     df_resid = float(result.df_resid)
-    
+
 
 
     # Simple Slopes Analysis
@@ -95,7 +96,7 @@ def run_mols(
     cols_title = f'{endo}-{focal_var}-{moderator_var}-mra'
 
     with open(out_dir / f"{cols_title}.txt", 'w') as f:
-        f.write(result.summary().as_text()) 
+        f.write(result.summary().as_text())
         f.write(
             "\n\n--- Simple Slopes Analysis ---\n"
             f"Probe method: {pm}\n"

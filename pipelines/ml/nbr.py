@@ -1,9 +1,12 @@
+import logging
+
 import numpy as np
 import statsmodels.api as sm
-import logging
+
 from config import ID_VAR
-from pipelines.data_organizers.impossible_var_cleaner import endo_exo_clean_impossible_var
 from pipelines.data_organizers.file_pathways import REGRESSION_ANALYSIS_OUTPUT_FOLDER
+from pipelines.data_organizers.impossible_var_cleaner import endo_exo_clean_impossible_var
+
 
 def run_nbr(
     endo: list,

@@ -1,21 +1,24 @@
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-import scipy.stats as stats
 import logging
-from sklearn.preprocessing import StandardScaler
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import scipy.stats as stats
+import seaborn as sns
 from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
 from sklearn.metrics import confusion_matrix
-from sklearn.model_selection import cross_val_score, cross_val_predict
-from pipelines.data_organizers.impossible_var_cleaner import clean_impossible_var
-from config import DX, CV, DPI
+from sklearn.model_selection import cross_val_predict, cross_val_score
+from sklearn.preprocessing import StandardScaler
+
+from config import CV, DPI, DX
 from pipelines.data_organizers.csv_loader import load_clean
 from pipelines.data_organizers.file_pathways import LDA_HM_VIS, LDA_OUTPUT_FOLDER
+from pipelines.data_organizers.impossible_var_cleaner import clean_impossible_var
+
 
 def lda_model(
         *cols: str,
-        dx_col_:str = DX, 
+        dx_col_:str = DX,
         cv_:int = CV,
         dpi_:int = DPI,
     ):
@@ -39,7 +42,7 @@ def lda_model(
     - Summary Table
     - Confusion Matrix Heatmap
     """
-    # Log 
+    # Log
     logger = logging.getLogger(__name__)
 
     # Initial load of csv
@@ -53,7 +56,7 @@ def lda_model(
     if dx_col_ not in clean_df.columns:
         raise ValueError(f'dx_col_ ({dx_col_}) not found in DataFrame\n - Check config')
 
-    # build df from selected cols 
+    # build df from selected cols
     df = clean_impossible_var(clean_df, *cols)
 
     # Standardize data (z-score)
@@ -78,7 +81,7 @@ def lda_model(
     cv_mean = cv_scores.mean()
     cv_std = cv_scores.std()
 
-     # Fit masked to LDA 
+     # Fit masked to LDA
     lda.fit(X_masked, y_masked)
 
     # Feature Loading
@@ -88,7 +91,7 @@ def lda_model(
         index=[f'LD{i+1}' for i in range(lda.coef_.shape[0])]
     ).T.sort_values('LD1', ascending=False)                     # T = transpose features to rows and LDs to columns
 
-    # Explained variance ratio 
+    # Explained variance ratio
     if hasattr(lda, 'explained_variance_ratio_'):
         evr = lda.explained_variance_ratio_
     else:
@@ -122,7 +125,7 @@ def lda_model(
     plt.savefig(output_dir / f"{cols_title}-LDA_CM.png", dpi=dpi_, bbox_inches='tight')
     plt.close()
 
-    # Output 
+    # Output
     output = pd.DataFrame([{
         'CV Accuracy': f'{cv_mean:.3f} +/- {cv_std:.3f}',
         'Chance Level': round(chance, 3),
@@ -140,7 +143,7 @@ def lda_model(
                 _, p = stats.shapiro(vals)
                 if p < 0.05:
                     warnings.append(f"[WARNING] {col} non-normal in class {int(cls)} (Shapiro-Wilk p={p:.3f})")
-    
+
     output_dir = LDA_OUTPUT_FOLDER
     with open(output_dir / f'{cols_title}-lda.txt','w') as f:
         f.write('--- Linear Discriminant Analysis ---\n\n')

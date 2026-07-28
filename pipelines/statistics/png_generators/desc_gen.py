@@ -1,11 +1,14 @@
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
-import scipy.stats as stats
 import logging
-from pipelines.data_organizers.csv_loader import load_clean
+
+import matplotlib.pyplot as plt
+import numpy as np
+import scipy.stats as stats
+import seaborn as sns
+
 from config import PALETTE
+from pipelines.data_organizers.csv_loader import load_clean
 from pipelines.data_organizers.file_pathways import DESC_VIS
+
 
 def desc_visualization(*cols, df=None, palette=PALETTE):
     logger = logging.getLogger(__name__)
@@ -15,7 +18,7 @@ def desc_visualization(*cols, df=None, palette=PALETTE):
         # non_na df of cols
         plot_vals = df[col]
         plot_vals = plot_vals[np.isfinite(plot_vals)]
-        
+
         # attempt to add a palette
         try:
             sns.color_palette(palette, as_cmap=True)
@@ -31,7 +34,7 @@ def desc_visualization(*cols, df=None, palette=PALETTE):
             dist='norm',
             plot=ax_probplot
             )
-        
+
         points, line = ax_probplot.get_lines()
 
         # Style the Points
@@ -45,7 +48,7 @@ def desc_visualization(*cols, df=None, palette=PALETTE):
         line.set_linewidth(2)
         line.set_linestyle("-")
 
-        ax_probplot.set_title(f'Probability Plot')
+        ax_probplot.set_title('Probability Plot')
 
         # Histogram
         mu, sigma = stats.norm.fit(plot_vals)

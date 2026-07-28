@@ -1,20 +1,29 @@
-import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-import seaborn as sns
 import logging
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import seaborn as sns
+from sklearn.decomposition import PCA
+from sklearn.metrics import adjusted_rand_score, normalized_mutual_info_score
 from sklearn.mixture import GaussianMixture
 from sklearn.preprocessing import StandardScaler
-from sklearn.decomposition import PCA
-from sklearn.metrics import normalized_mutual_info_score, adjusted_rand_score
-from pipelines.data_organizers.impossible_var_cleaner import clean_impossible_var
-from config import DX, DPI, K_MIN, K_MAX, N_INIT, RAND_STATE, REG_COVAR
-from pipelines.data_organizers.file_pathways import BIC_AIC_VIS, CEV_PCA_VIS, GMM_HM_VIS, GMM_PP_VIS, GMM_ANALYSIS_OUTPUT_FOLDER
+
+from config import DPI, DX, K_MAX, K_MIN, N_INIT, RAND_STATE, REG_COVAR
 from pipelines.data_organizers.csv_loader import load_clean
+from pipelines.data_organizers.file_pathways import (
+    BIC_AIC_VIS,
+    CEV_PCA_VIS,
+    GMM_ANALYSIS_OUTPUT_FOLDER,
+    GMM_HM_VIS,
+    GMM_PP_VIS,
+)
+from pipelines.data_organizers.impossible_var_cleaner import clean_impossible_var
+
 
 def gmm_analysis(
         *cols: str,
-        dx_col_: str = DX, 
+        dx_col_: str = DX,
         dpi_: int = DPI,
         k_min: int = K_MIN,
         k_max: int = K_MAX,
@@ -54,7 +63,7 @@ def gmm_analysis(
 
     # Logging
     logger = logging.getLogger(__name__)
-    
+
     # Adjusting for range parameters of k_max
     k_max = k_max+1
 
@@ -71,7 +80,7 @@ def gmm_analysis(
     if not isinstance(reg_covar, float):
         raise ValueError(f'reg_covar must be a float value, got {reg_covar}\n - Check config')
 
-    # build df from selected cols 
+    # build df from selected cols
     df = clean_impossible_var(clean_df, *cols)
 
     # Standardize data (z-score)
@@ -93,7 +102,7 @@ def gmm_analysis(
 
     # Plot cumulative explained variance
     plt.figure(figsize=(8,5))
-    plt.plot(range(1, len(cumulative_full) + 1), 
+    plt.plot(range(1, len(cumulative_full) + 1),
              cumulative_full,
              marker='o', linestyle='--', color='b'
              )
@@ -111,7 +120,7 @@ def gmm_analysis(
 
     # Visual Representation of standardized data
     g = sns.pairplot(
-        data=X_pca, 
+        data=X_pca,
         diag_kind='kde',
         )
     g.map_upper(sns.kdeplot)
@@ -128,9 +137,9 @@ def gmm_analysis(
 
     for cov in cov_types:
         for k in range(k_min,k_max):
-            gmm_k = GaussianMixture(n_components=k, 
-                                    covariance_type=cov, 
-                                    n_init=n_init, 
+            gmm_k = GaussianMixture(n_components=k,
+                                    covariance_type=cov,
+                                    n_init=n_init,
                                     random_state=rand_state,
                                     reg_covar=reg_covar,
                                     )
@@ -144,7 +153,7 @@ def gmm_analysis(
     aic = np.array(aic)
 
     acceptable_keys = []
-    
+
     for cov in cov_types:
         cov_indices = [i for i, (c,k) in enumerate(all_keys) if c == cov]
         cov_bics = bic[cov_indices]
@@ -160,7 +169,7 @@ def gmm_analysis(
     best_idx = np.argmin(bic)
     best_cov, best_k = all_keys[best_idx]
     best_gmm = gmms[(best_cov, best_k)]
-    
+
     aic_best_idx = np.argmin(aic)
     aic_best_cov, aic_best_k = all_keys[aic_best_idx]
 
@@ -213,7 +222,7 @@ def gmm_analysis(
 
     # Crosstab diagnosis x cluster
     ct = pd.crosstab(
-        dx, 
+        dx,
         best_labels,
         normalize="index"
         )
@@ -251,13 +260,13 @@ def gmm_analysis(
     # Output DF
     output = pd.DataFrame([{
         'Optimal Number of Components': optimal_n,
-        'Acceptable (cov, K) Combinations': str(acceptable_keys), 
+        'Acceptable (cov, K) Combinations': str(acceptable_keys),
         'Best covariance': best_cov,
         'Best K': best_k,
         'Cluster Counts': str(cluster_counts.tolist()),
         'Cluster Proportions': str(cluster_proportions.round(3).tolist()),
         'NMI': round(nmi,3),
-        'ARI': round(ari,3), 
+        'ARI': round(ari,3),
         'DX Length': dx_length,
         'DX Non-null': dx_non_null,
         'DX Unique': dx_unique,

@@ -1,6 +1,7 @@
 import pandas as pd
 import scipy.stats as stats
 
+
 def p_vm(series: pd.Series) -> tuple[list[float], str]:
     """
     Returns probe values and the method used.\n

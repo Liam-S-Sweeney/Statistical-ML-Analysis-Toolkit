@@ -1,10 +1,12 @@
 import numpy as np
 import pandas as pd
 import statsmodels.api as sm
+
 from config import ID_VAR
-from pipelines.data_organizers.impossible_var_cleaner import endo_exo_clean_impossible_var
 from pipelines.data_organizers.file_pathways import REGRESSION_ANALYSIS_OUTPUT_FOLDER
+from pipelines.data_organizers.impossible_var_cleaner import endo_exo_clean_impossible_var
 from pipelines.utility.dichotomize_count_var import dichotomize_count_var
+
 
 def run_blr(
     endo: list | list[str],
@@ -98,7 +100,7 @@ def run_blr(
         f.write(result.summary().as_text())
         f.write("\n\nOdds Ratios (exp(coef)) with 95% CIs:\n")
         f.write(or_df.to_string())
-        f.write(f"\n\nModel Fit:\n")
+        f.write("\n\nModel Fit:\n")
         f.write(f"AIC: {round(result.aic, 3)}\n")
         f.write(f"BIC: {round(result.bic, 3)}\n")
         f.write(f"Pseudo R-squared (McFadden): {round(result.prsquared, 3)}\n")

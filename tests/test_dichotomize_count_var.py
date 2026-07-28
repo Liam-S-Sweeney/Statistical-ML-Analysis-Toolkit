@@ -1,5 +1,7 @@
 import pandas as pd
+
 from pipelines.utility.dichotomize_count_var import dichotomize_count_var
+
 
 def test_dichotomize_splits_on_threshold():
     # Known

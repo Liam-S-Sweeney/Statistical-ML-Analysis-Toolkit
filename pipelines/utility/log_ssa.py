@@ -28,7 +28,7 @@ def simple_slopes_logistic(
         ].values
     except ValueError:
         raise ValueError("Covariance matrix unavailable — model likely did not converge. Check your variable distributions.")
-        
+
 
     rows = []
     for mod_val in probe_vals:

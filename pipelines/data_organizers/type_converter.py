@@ -1,7 +1,10 @@
-import pyreadstat
-import pandas
 import logging
+
+import pandas
+import pyreadstat
+
 from pipelines.data_organizers.file_pathways import NON_CSVS_FOLDER, UNMERGED_CSVS_FOLDER
+
 
 def to_csv(convert_dir=NON_CSVS_FOLDER, output_path=UNMERGED_CSVS_FOLDER):
     logger = logging.getLogger(__name__)

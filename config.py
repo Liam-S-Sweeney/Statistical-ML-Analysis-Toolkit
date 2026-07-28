@@ -8,12 +8,12 @@ ID_VAR = 'ID1C'
 
 MISSING_CODES = [-99, -999, -9999]
 IMPOSSIBLE_ZERO_VARS = [
-    'Glucose', 
-    'BloodPressure', 
-    'SkinThickness', 
-    'Insulin', 
+    'Glucose',
+    'BloodPressure',
+    'SkinThickness',
+    'Insulin',
     'BMI'
-    ] 
+    ]
 
 HUE_COL = None
 SIZE_COL = None
