@@ -3,8 +3,15 @@
 A Streamlit app for end-to-end statistical and machine learning analysis of tabular data. Upload a dataset, pick variables and settings in the sidebar, and every analysis renders in the browser with a download button — no scripting, no config editing, no files placed on the server.
 
 Developed by Liam Sweeney.
+<p>
+  <a href="https://statistical-ml-analysis-toolkit-6ksufkeieztrnrdfvzkvf5.streamlit.app/">
+    <img src="https://static.streamlit.io/badges/streamlit_badge_black_white.svg" alt="Open in Streamlit">
+  </a>
+</p>
 
-![Toolkit interface](docs/st_display.png)
+---
+
+<img width="1876" height="775" alt="blank_display" src="https://github.com/user-attachments/assets/90764caa-7038-47df-8f16-4968a379beea" />
 
 ---
 
@@ -38,6 +45,22 @@ Developed by Liam Sweeney.
 ### Data Ingestion
 - **Multi-format upload** — CSV, Excel (`.xlsx`/`.xls`), SPSS (`.sav`), and JSON are parsed directly in the browser; parsing is cached on file content so reruns are instant
 - **In-app merging** — Upload several files at once and supply an ID column; they are outer-joined on that column, with each file's columns prefixed by its filename to preserve wave/source provenance (files lacking the ID column are skipped with a warning)
+
+---
+
+## Images of Toolkit
+
+<p align="center">
+<img width="1467" height="438" alt="blank_dataset_display" src="https://github.com/user-attachments/assets/86c4500e-8b40-457a-975d-bc6382c841d9" />
+</p>
+
+<p align="center">
+<img width="1518" height="769" alt="full_dataset_display" src="https://github.com/user-attachments/assets/de475de3-4bf4-4df5-8757-c217e87f2e0c" />
+</p>
+
+<p align="center">
+<img width="206" height="886" alt="sidebar_display" src="https://github.com/user-attachments/assets/38985650-3fed-4f6d-be21-d4ca1f7628a0" />
+</p>
 
 ---
 
@@ -121,8 +144,15 @@ Statistical-ML-Analysis-Toolkit/
 ```
 
 ---
+## Getting Started Remotely
+- Click the link below to access the toolkit via Streamlit.app
+<p>
+  <a href="https://statistical-ml-analysis-toolkit-6ksufkeieztrnrdfvzkvf5.streamlit.app/">
+    <img src="https://static.streamlit.io/badges/streamlit_badge_black_white.svg" alt="Open in Streamlit">
+  </a>
+</p>
 
-## Getting Started
+## Getting Started Locally
 
 ### 1. Requirements
 
