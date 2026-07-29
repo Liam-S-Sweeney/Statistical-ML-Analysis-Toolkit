@@ -1,7 +1,11 @@
 """
 Session-scoped store for the active dataset and runtime settings.
 
-osted deployment, where a visitor has no way to place a file in `files/`.
+Why this exists
+---------------
+Every pipeline module reaches its data through `csv_loader.load_clean()`, which
+previously read a hardcoded CSV path off disk. That works locally but not on a
+hosted deployment, where a visitor has no way to place a file in `files/`.
 
 This module holds the active DataFrame (and the settings that used to live as
 module-level constants in `config.py`) in Streamlit's session state, so
@@ -9,7 +13,6 @@ module-level constants in `config.py`) in Streamlit's session state, so
 
 It degrades gracefully: outside a Streamlit runtime (e.g. under pytest) it falls
 back to a plain dict, so the existing test suite keeps working unchanged.
-
 """
 
 from __future__ import annotations
@@ -22,9 +25,10 @@ try:
     import streamlit as st
 
     _HAS_STREAMLIT = True
-except ImportError:  # pragma: no cover - streamlit in requirements.txt
+except ImportError:  # pragma: no cover - streamlit always present in the app
     _HAS_STREAMLIT = False
 
+# Used when there is no Streamlit script run context (tests, plain imports).
 _FALLBACK_STORE: dict[str, Any] = {}
 
 _DF_KEY = "_active_df"
@@ -36,7 +40,7 @@ DEFAULT_SETTINGS: dict[str, Any] = {
     "ID_VAR": "",
     "MISSING_CODES": [-99, -999, -9999],
     "IMPOSSIBLE_ZERO_VARS": [],
-    # Moderated Regression
+    # Moderated regression
     "DATA_THRESHOLD": 1,
     # GMM
     "DX": "",
@@ -52,21 +56,18 @@ DEFAULT_SETTINGS: dict[str, Any] = {
 
 
 def _store() -> Any:
-    """
-    Return session state if inside a Streamlit run,
-    else return a plain dict.
-    """
+    """Return session state if we're inside a Streamlit run, else a plain dict."""
     if _HAS_STREAMLIT:
         try:
-            # Touching session_state outside a script run raises; fall back
-            st.session_state  # noqa: B018 - silence quality insureance B018
+            # Touching session_state outside a script run raises; fall back.
+            st.session_state  # noqa: B018
             return st.session_state
         except Exception:
             return _FALLBACK_STORE
     return _FALLBACK_STORE
 
 
-# --- Active Dataset ---
+# --- Active dataset -------------------------------------------------------
 
 
 def set_active_df(df: pd.DataFrame, name: str = "uploaded.csv") -> None:
@@ -76,10 +77,10 @@ def set_active_df(df: pd.DataFrame, name: str = "uploaded.csv") -> None:
 
 
 def get_active_df() -> pd.DataFrame | None:
-    return _store().get(_NAME_KEY)
+    return _store().get(_DF_KEY)
 
 
-def get_active_name() -> pd.DataFrame | None:
+def get_active_name() -> str | None:
     return _store().get(_NAME_KEY)
 
 
@@ -96,11 +97,11 @@ def clear_active_df() -> None:
             pass
 
 
-# --- Settings ---
+# --- Settings -------------------------------------------------------------
 
 
 def get_setting(key: str) -> Any:
-    """Runtime value for a setting, falling back to the packaged default"""
+    """Runtime value for a setting, falling back to the packaged default."""
     return _store().get(f"{_CFG_PREFIX}{key}", DEFAULT_SETTINGS.get(key))
 
 
