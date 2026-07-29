@@ -141,7 +141,11 @@ with st.expander("Dataset", expanded=not session_data.has_active_df()):
 
         if merged is not None:
             session_data.set_active_df(merged, name)
-            session_data.set_setting("ID_VAR", merge_key)
+            # Only seed ID_VAR from the merge key when one was actually given;
+            # this block re-runs on every rerun and would otherwise wipe the
+            # ID column chosen in the sidebar.
+            if merge_key:
+                session_data.set_setting("ID_VAR", merge_key)
 
     if session_data.has_active_df():
         active = session_data.get_active_df()
@@ -157,6 +161,20 @@ with st.expander("Dataset", expanded=not session_data.has_active_df()):
 data_available = session_data.has_active_df()
 df = session_data.get_active_df()
 var_options = list(df.columns) if data_available else []
+
+def _seed_widget(key: str, stored, options: list) -> None:
+    """
+    Initialise a keyed selectbox once, and reset it if its value is no longer a
+    valid option (e.g. the user swapped datasets). Streamlit owns the value
+    after this; we never pass `index` again, which is what makes the selection
+    survive reruns.
+    """
+    current = st.session_state.get(key)
+    if current is None:
+        st.session_state[key] = stored if stored in options else options[0]
+    elif current not in options:
+        st.session_state[key] = options[0]
+
 
 # --- Sidebar: variables + settings ---
 selected: list[str] = []
@@ -179,6 +197,16 @@ with st.sidebar:
         st.header("Settings")
 
         with st.expander("Data cleaning"):
+            id_options = ["(none)"] + var_options
+            _seed_widget("cfg_id_var", session_data.get_setting("ID_VAR"), id_options)
+            id_choice = st.selectbox(
+                "Subject ID column",
+                id_options,
+                key="cfg_id_var",
+                help="Required for chi-square, RM-ANOVA, and all regressions.",
+            )
+            session_data.set_setting("ID_VAR", "" if id_choice == "(none)" else id_choice)
+
             codes = st.text_input(
                 "Missing-value codes (comma separated)",
                 value=", ".join(str(c) for c in session_data.get_setting("MISSING_CODES")),
@@ -206,10 +234,11 @@ with st.sidebar:
             )
 
         with st.expander("GMM / LDA"):
-            dx_current = session_data.get_setting("DX")
             dx_options = ["(none)"] + var_options
-            dx_index = dx_options.index(dx_current) if dx_current in dx_options else 0
-            dx_choice = st.selectbox("Diagnostic / outcome column", dx_options, index=dx_index)
+            _seed_widget("cfg_dx", session_data.get_setting("DX"), dx_options)
+            dx_choice = st.selectbox(
+                "Diagnostic / outcome column", dx_options, key="cfg_dx"
+            )
             session_data.set_setting("DX", "" if dx_choice == "(none)" else dx_choice)
 
             k_min, k_max = st.slider("K range", 1, 20, (
@@ -260,6 +289,23 @@ def mod_one():
     return _require(len(mod_selected) == 1, "Select exactly one moderator variable.")
 
 
+def _require_id() -> bool:
+    return _require(
+        bool(session_data.get_setting("ID_VAR")),
+        "Set a Subject ID column in the sidebar (Settings → Data cleaning) first.",
+    )
+
+
+def _id() -> str:
+    id_var = session_data.get_setting("ID_VAR")
+    if not id_var:
+        raise ValueError(
+            "No Subject ID column is set. Choose one in the sidebar under "
+            "Settings -> Data cleaning."
+        )
+    return id_var
+
+
 def _blocked() -> bool:
     if not data_available:
         st.warning("Upload a dataset first.")
@@ -286,19 +332,25 @@ with col_var_expl:
 with col_rma_icc:
     if st.button("RM-ANOVA & ICC", use_container_width=True):
         if not _blocked() and gen_min(2):
-            run_and_render(
-                "RM-ANOVA & ICC", rm_anova_icc.rm_anova_icc, ALL_OUTPUT_FOLDERS, *selected
-            )
+            if _require_id():
+                run_and_render(
+                    "RM-ANOVA & ICC",
+                    rm_anova_icc.rm_anova_icc,
+                    ALL_OUTPUT_FOLDERS,
+                    *selected,
+                    id_var=_id(),
+                )
 
 with col_chi:
     if st.button("Chi-Square Test", use_container_width=True):
-        if not _blocked() and endo_one() and exo_min(1):
+        if not _blocked() and _require_id() and endo_one() and exo_min(1):
             run_and_render(
                 "Chi-Square Test",
                 chi_sqr.run_chi_sqr,
                 ALL_OUTPUT_FOLDERS,
                 endo=endo_selected,
                 exo=exo_selected,
+                id_var=_id(),
             )
 
 # --- ML analyses ---
@@ -330,44 +382,57 @@ with col_gmm:
 with col_lda:
     if st.button("LDA Analysis", use_container_width=True):
         if not _blocked() and gen_min(2):
-            run_and_render("LDA Analysis", lda.lda_model, ALL_OUTPUT_FOLDERS, *selected)
+            if not session_data.get_setting("DX"):
+                st.warning("Set a diagnostic/outcome column in the sidebar first.")
+            else:
+                run_and_render(
+                    "LDA Analysis",
+                    lda.lda_model,
+                    ALL_OUTPUT_FOLDERS,
+                    *selected,
+                    dx_col_=session_data.get_setting("DX"),
+                    dpi_=int(session_data.get_setting("DPI")),
+                )
 
 with col_olr:
     if st.button("OLR", use_container_width=True):
-        if not _blocked() and endo_one() and exo_min(1):
+        if not _blocked() and _require_id() and endo_one() and exo_min(1):
             run_and_render(
                 "Ordinal Logistic Regression",
                 olr.run_olr,
                 ALL_OUTPUT_FOLDERS,
                 endo=endo_selected,
                 exo=exo_selected,
+                id_var=_id(),
             )
 
 with col_nbr:
     if st.button("NBR", use_container_width=True):
-        if not _blocked() and endo_one() and exo_min(1):
+        if not _blocked() and _require_id() and endo_one() and exo_min(1):
             run_and_render(
                 "Negative Binomial Regression",
                 nbr.run_nbr,
                 ALL_OUTPUT_FOLDERS,
                 endo=endo_selected,
                 exo=exo_selected,
+                id_var=_id(),
             )
 
 with col_blr:
     if st.button("BLR", use_container_width=True):
-        if not _blocked() and endo_one() and exo_min(1):
+        if not _blocked() and _require_id() and endo_one() and exo_min(1):
             run_and_render(
                 "Binary Logistic Regression",
                 blr.run_blr,
                 ALL_OUTPUT_FOLDERS,
                 endo=endo_selected,
                 exo=exo_selected,
+                id_var=_id(),
             )
 
 with col_blr_mra:
     if st.button("BLR MRA + SSA", use_container_width=True):
-        if not _blocked() and endo_one() and exo_one() and mod_one():
+        if not _blocked() and _require_id() and endo_one() and exo_one() and mod_one():
             run_and_render(
                 "BLR Moderated Regression",
                 mblr.run_mblr,
@@ -375,11 +440,12 @@ with col_blr_mra:
                 endo=endo_selected,
                 focal_var=exo_selected,
                 moderator_var=mod_selected,
+                id_var=_id(),
             )
 
 with col_ols:
     if st.button("OLSR", use_container_width=True):
-        if not _blocked() and endo_one() and exo_min(1):
+        if not _blocked() and _require_id() and endo_one() and exo_min(1):
             run_and_render(
                 "OLS Regression",
                 ols.run_ols,
@@ -390,7 +456,7 @@ with col_ols:
 
 with col_ols_mra:
     if st.button("OLS MRA + SSA", use_container_width=True):
-        if not _blocked() and endo_one() and exo_one() and mod_one():
+        if not _blocked() and _require_id() and endo_one() and exo_one() and mod_one():
             run_and_render(
                 "OLS Moderated Regression",
                 mols.run_mols,
@@ -398,6 +464,7 @@ with col_ols_mra:
                 endo=endo_selected,
                 focal_var=exo_selected,
                 moderator_var=mod_selected,
+                id_var=_id(),
             )
 
 # --- Visualizations ---
