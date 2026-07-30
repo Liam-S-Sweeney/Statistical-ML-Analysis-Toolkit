@@ -6,6 +6,10 @@
     background-color: #07010f;
 }
 
+[data-testid="stHeader"] {
+    background-color: transparent;
+}
+
 h1, h2, h3 {
     color: #edfcff;
     text-align: center;
