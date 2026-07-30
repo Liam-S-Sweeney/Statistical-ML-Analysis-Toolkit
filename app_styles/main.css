@@ -1,9 +1,9 @@
 .stApp {
-    background-color: #18092b;
+    background-color: #05000c;
 }
 
 [data-testid="stSidebar"] {
-    background-color: #241040;
+    background-color: #07010f;
 }
 
 [data-testid="stHeader"] {
