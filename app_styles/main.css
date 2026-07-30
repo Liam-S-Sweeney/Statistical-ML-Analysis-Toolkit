@@ -1,3 +1,15 @@
+.stApp {
+    background-color: #18092b;
+}
+
+[data-testid="stSidebar"] {
+    background-color: #241040;
+}
+
+[data-testid="stHeader"] {
+    background-color: transparent;
+}
+
 h1, h2, h3 {
     color: #edfcff;
     text-align: center;
@@ -31,3 +43,4 @@ p {
 .stMultiSelect { 
     margin-top: -12px;
 }
+
