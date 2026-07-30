@@ -1,23 +1,9 @@
-.stApp {
-    background-color: #05000c;
-}
-
-[data-testid="stSidebar"] {
-    background-color: #07010f;
-}
-
-[data-testid="stHeader"] {
-    background-color: transparent;
-}
-
 h1, h2, h3 {
-    color: #edfcff;
     text-align: center;
     text-decoration: underline;
 }
 
 p {
-    color: #edfcff;
     text-align: center;
 }
 
@@ -26,21 +12,26 @@ p {
     padding-bottom: 2rem;
 }
 
+.stMultiSelect {
+    margin-top: -12px;
+}
+
 .stMultiSelect > div {
     border-radius: 8px;
 }
 
-.stButton>button {
+.stButton > button,
+.stDownloadButton > button {
     background-color: #6c32ab;
+    color: #fafafa;
     border-radius: 8px;
     height: 3em;
 }
 
-.stButton>button:hover {
+.stButton > button:hover,
+.stButton > button:focus,
+.stDownloadButton > button:hover,
+.stDownloadButton > button:focus {
     background-color: #5a298f;
+    color: #fafafa;
 }
-
-.stMultiSelect { 
-    margin-top: -12px;
-}
-
