@@ -34,9 +34,7 @@ def load_clean(path=None) -> pd.DataFrame:
       2. An explicit `path` argument
       3. The configured CSV on disk (local / dev use)
 
-    Every pipeline module calls this, so honouring the session store here is
-    what lets the whole toolkit run on uploaded data without any further
-    pipeline changes.
+    Essential for every following pipeline.
     """
     session_df = session_data.get_active_df()
     if session_df is not None and path is None:
