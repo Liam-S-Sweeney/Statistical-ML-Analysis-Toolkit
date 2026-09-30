@@ -13,7 +13,7 @@ from pathlib import Path
 import pandas as pd
 import streamlit as st
 
-_TEXT_SUFFIXES = {".txt", ".log", "md"}
+_TEXT_SUFFIXES = {".txt", ".log", ".md"}
 _IMAGE_SUFFIXES = {".png", ".jpg", ".jpeg"}
 
 
