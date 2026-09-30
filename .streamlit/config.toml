@@ -1,3 +1,9 @@
 [theme]
 base = "dark"
 primaryColor = "#6c32ab"
+
+[server]
+address = "localhost"   
+
+[browser]
+gatherUsageStats = false

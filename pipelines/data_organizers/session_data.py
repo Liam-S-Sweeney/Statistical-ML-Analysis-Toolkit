@@ -16,9 +16,7 @@ back to a plain dict, so the existing test suite keeps working unchanged.
 """
 
 from __future__ import annotations
-
 from typing import Any
-
 import pandas as pd
 
 try:
