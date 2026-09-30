@@ -8,10 +8,8 @@ whatever appeared.
 """
 
 from __future__ import annotations
-
 from collections.abc import Callable, Iterable
 from pathlib import Path
-
 import pandas as pd
 import streamlit as st
 
