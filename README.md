@@ -4,7 +4,7 @@ A Streamlit app for end-to-end statistical and machine learning analysis of tabu
 
 Developed by Liam Sweeney.
 <p>
-  <a href="https://statistical-ml-analysis-toolkit-6ksufkeieztrnrdfvzkvf5.streamlit.app/">
+  <a href="[https://statistical-ml-analysis-toolkit-6ksufkeieztrnrdfvzkvf5.streamlit.app](https://statistical-ml-analysis-toolkit.streamlit.app/)/">
     <img src="https://static.streamlit.io/badges/streamlit_badge_black_white.svg" alt="Open in Streamlit">
   </a>
 </p>
