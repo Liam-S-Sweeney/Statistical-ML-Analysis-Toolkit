@@ -54,6 +54,7 @@ outputs/
 
 # Exceptions
 !diabetes.csv
+!airquality.csv
 !.gitkeep
 !st_display.png
 !requirements.txt

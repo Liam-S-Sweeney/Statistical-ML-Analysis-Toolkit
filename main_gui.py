@@ -11,7 +11,9 @@ which is what makes it deployable to Streamlit Community Cloud.
 
 import logging
 import os
-
+import tempfile
+import pyreadstat
+import numpy as np
 import pandas as pd
 import streamlit as st
 
@@ -39,7 +41,7 @@ from pipelines.statistics.png_generators import desc_gen, hm_gen, pg_gen, pp_gen
 # ML
 from pipelines.ml import blr, gmm_analysis, lda, mblr, mols, nbr, olr, ols, rm_anova_icc
 # Utility
-from pipelines.utility import overlap_checker
+from pipelines.utility import overlap_checker, mcar
 
 # --- Setup ---
 for folder in RUNTIME_FOLDERS:
@@ -86,15 +88,20 @@ def _read_upload(file_bytes: bytes, name: str) -> pd.DataFrame:
 
     if name.lower().endswith((".xlsx", ".xls")):
         return pd.read_excel(io.BytesIO(file_bytes))
+    
     if name.lower().endswith(".sav"):
-        import pyreadstat
-
-        with open("/tmp/_upload.sav", "wb") as handle:
+        with tempfile.NamedTemporaryFile(suffix=".sav", delete=False) as handle:
             handle.write(file_bytes)
-        frame, _ = pyreadstat.read_sav("/tmp/_upload.sav")
+            tmp_path = handle.name
+        try:
+            frame, _ = pyreadstat.read_sav(tmp_path)
+        finally:
+            os.remove(tmp_path)
         return frame
+    
     if name.lower().endswith(".json"):
         return pd.read_json(io.BytesIO(file_bytes))
+    
     return pd.read_csv(io.BytesIO(file_bytes), low_memory=False)
 
 
@@ -153,7 +160,7 @@ with st.expander("Dataset", expanded=not session_data.has_active_df()):
             f"Active dataset: **{session_data.get_active_name()}** — "
             f"{active.shape[0]:,} rows × {active.shape[1]:,} columns"
         )
-        st.dataframe(active.head(20), use_container_width=True)
+        st.dataframe(active.head(20), width="stretch")
     else:
         st.info("Upload a dataset to enable the analyses below.")
 
@@ -313,14 +320,25 @@ def _blocked() -> bool:
     return False
 
 
+def _apply_missing_rules(frame: pd.DataFrame) -> pd.DataFrame:
+    """Turn the sidebar's missing-value codes and impossible zeros into NaN."""
+    frame = frame.copy()
+    codes = session_data.get_setting("MISSING_CODES")
+    if codes:
+        frame = frame.replace(codes, np.nan)
+    for col in session_data.get_setting("IMPOSSIBLE_ZERO_VARS"):
+        if col in frame.columns:
+            frame[col] = frame[col].replace(0, np.nan)
+    return frame
+
 # --- Statistical analyses ---
 st.divider()
 st.subheader("Statistical Analyses")
 
-col_var_expl, col_rma_icc, col_chi = st.columns(3)
+col_var_expl, col_rma_icc, col_chi, col_mcar = st.columns(4)
 
 with col_var_expl:
-    if st.button("Uni/Multivariate Exploration", use_container_width=True):
+    if st.button("Uni/Multivariate Exploration", width="stretch"):
         if not _blocked() and gen_min(1):
             run_and_render(
                 "Uni/Multivariate Exploration",
@@ -330,7 +348,7 @@ with col_var_expl:
             )
 
 with col_rma_icc:
-    if st.button("RM-ANOVA & ICC", use_container_width=True):
+    if st.button("RM-ANOVA & ICC", width="stretch"):
         if not _blocked() and gen_min(2):
             if _require_id():
                 run_and_render(
@@ -342,7 +360,7 @@ with col_rma_icc:
                 )
 
 with col_chi:
-    if st.button("Chi-Square Test", use_container_width=True):
+    if st.button("Chi-Square Test", width="stretch"):
         if not _blocked() and _require_id() and endo_one() and exo_min(1):
             run_and_render(
                 "Chi-Square Test",
@@ -353,6 +371,27 @@ with col_chi:
                 id_var=_id(),
             )
 
+
+with col_mcar:
+    run_mcar = st.button("Little's MCAR Test", width="stretch")
+
+if run_mcar and not _blocked() and gen_min(2):
+    try:
+        result = mcar.little_mcar_test(_apply_missing_rules(df), columns=selected)
+    except ValueError as err:
+        st.error(str(err))
+    else:
+        st.markdown("#### Little's MCAR Test")
+        st.code(result.summary(), language=None)
+        st.dataframe(result.patterns, width="stretch")
+        st.download_button(
+            "Download pattern table (CSV)",
+            result.patterns.to_csv(index=False).encode("utf-8"),
+            file_name="mcar_patterns.csv",
+            mime="text/csv",
+            on_click="ignore",
+        )
+
 # --- ML analyses ---
 st.divider()
 st.subheader("ML Analyses")
@@ -361,7 +400,7 @@ col_gmm, col_lda, col_olr, col_nbr = st.columns(4)
 col_blr, col_blr_mra, col_ols, col_ols_mra = st.columns(4)
 
 with col_gmm:
-    if st.button("GMM Analysis", use_container_width=True):
+    if st.button("GMM Analysis", width="stretch"):
         if not _blocked() and gen_min(2):
             if not session_data.get_setting("DX"):
                 st.warning("Set a diagnostic/outcome column in the sidebar first.")
@@ -380,7 +419,7 @@ with col_gmm:
                 )
 
 with col_lda:
-    if st.button("LDA Analysis", use_container_width=True):
+    if st.button("LDA Analysis", width="stretch"):
         if not _blocked() and gen_min(2):
             if not session_data.get_setting("DX"):
                 st.warning("Set a diagnostic/outcome column in the sidebar first.")
@@ -395,7 +434,7 @@ with col_lda:
                 )
 
 with col_olr:
-    if st.button("OLR", use_container_width=True):
+    if st.button("OLR", width="stretch"):
         if not _blocked() and _require_id() and endo_one() and exo_min(1):
             run_and_render(
                 "Ordinal Logistic Regression",
@@ -407,7 +446,7 @@ with col_olr:
             )
 
 with col_nbr:
-    if st.button("NBR", use_container_width=True):
+    if st.button("NBR", width="stretch"):
         if not _blocked() and _require_id() and endo_one() and exo_min(1):
             run_and_render(
                 "Negative Binomial Regression",
@@ -419,7 +458,7 @@ with col_nbr:
             )
 
 with col_blr:
-    if st.button("BLR", use_container_width=True):
+    if st.button("BLR", width="stretch"):
         if not _blocked() and _require_id() and endo_one() and exo_min(1):
             run_and_render(
                 "Binary Logistic Regression",
@@ -431,7 +470,7 @@ with col_blr:
             )
 
 with col_blr_mra:
-    if st.button("BLR MRA + SSA", use_container_width=True):
+    if st.button("BLR MRA + SSA", width="stretch"):
         if not _blocked() and _require_id() and endo_one() and exo_one() and mod_one():
             run_and_render(
                 "BLR Moderated Regression",
@@ -444,7 +483,7 @@ with col_blr_mra:
             )
 
 with col_ols:
-    if st.button("OLSR", use_container_width=True):
+    if st.button("OLSR", width="stretch"):
         if not _blocked() and _require_id() and endo_one() and exo_min(1):
             run_and_render(
                 "OLS Regression",
@@ -455,7 +494,7 @@ with col_ols:
             )
 
 with col_ols_mra:
-    if st.button("OLS MRA + SSA", use_container_width=True):
+    if st.button("OLS MRA + SSA", width="stretch"):
         if not _blocked() and _require_id() and endo_one() and exo_one() and mod_one():
             run_and_render(
                 "OLS Moderated Regression",
@@ -480,7 +519,7 @@ for column, label, fn in (
     (col_pp, "PairPlot", pp_gen.pair_plot_visualizations),
 ):
     with column:
-        if st.button(label, use_container_width=True):
+        if st.button(label, width="stretch"):
             if not _blocked() and gen_min(2):
                 run_and_render(label, fn, ALL_OUTPUT_FOLDERS, *selected)
 
@@ -491,7 +530,7 @@ st.subheader("Full-Data Generators")
 col_md_gen, col_av_gen = st.columns(2)
 
 with col_md_gen:
-    if st.button("Master Descriptive CSV", use_container_width=True):
+    if st.button("Master Descriptive CSV", width="stretch"):
         if not _blocked():
             run_and_render(
                 "Master Descriptives",
@@ -500,7 +539,7 @@ with col_md_gen:
             )
 
 with col_av_gen:
-    if st.button("All Variable Descriptives", use_container_width=True):
+    if st.button("All Variable Descriptives", width="stretch"):
         if not _blocked():
             run_and_render(
                 "All Variable Descriptives",

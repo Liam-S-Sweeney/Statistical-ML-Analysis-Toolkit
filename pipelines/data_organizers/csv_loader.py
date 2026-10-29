@@ -15,6 +15,9 @@ def load_raw(path=MAIN_CSV) -> pd.DataFrame:
     return pd.read_csv(path, low_memory=False)
 
 
+"""
+Consider adding FIML or MI options later
+"""
 def clean_numeric(df: pd.DataFrame, missing_codes=None) -> pd.DataFrame:
     """Convert to numeric and replace missing codes with NaN."""
     if missing_codes is None:

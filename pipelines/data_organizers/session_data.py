@@ -1,29 +1,11 @@
-"""
-Session-scoped store for the active dataset and runtime settings.
-
-Why this exists
----------------
-Every pipeline module reaches its data through `csv_loader.load_clean()`, which
-previously read a hardcoded CSV path off disk. That works locally but not on a
-hosted deployment, where a visitor has no way to place a file in `files/`.
-
-This module holds the active DataFrame (and the settings that used to live as
-module-level constants in `config.py`) in Streamlit's session state, so
-`load_clean()` can serve uploaded data without any pipeline module changing.
-
-It degrades gracefully: outside a Streamlit runtime (e.g. under pytest) it falls
-back to a plain dict, so the existing test suite keeps working unchanged.
-"""
-
 from __future__ import annotations
 from typing import Any
 import pandas as pd
 
 try:
     import streamlit as st
-
     _HAS_STREAMLIT = True
-except ImportError:  # pragma: no cover - streamlit always present in the app
+except ImportError:  
     _HAS_STREAMLIT = False
 
 # Used when there is no Streamlit script run context (tests, plain imports).

@@ -1,16 +1,19 @@
 import logging
-from pathlib import Path
-
 import pandas as pd
-
+from functools import reduce
 from config import ID_VAR
+from pathlib import Path
 from pipelines.data_organizers.file_pathways import MASTER_CSVS_FOLDER, UNMERGED_CSVS_FOLDER
 
 
-def merge_csv(convert_dir=UNMERGED_CSVS_FOLDER, output_path = MASTER_CSVS_FOLDER):
+def merge_csv(convert_dir: Path=UNMERGED_CSVS_FOLDER, output_path: Path=MASTER_CSVS_FOLDER) -> None:
+    """
+    Merges all '.csv' files from the convert_dir 
+    """
     logger = logging.getLogger(__name__)
     all_csvs_name = ""
     df_ls = []
+
     for file in sorted(convert_dir.glob('*.csv')):
         wave_label = file.stem
         temp = pd.read_csv(file, low_memory=False)
@@ -28,7 +31,6 @@ def merge_csv(convert_dir=UNMERGED_CSVS_FOLDER, output_path = MASTER_CSVS_FOLDER
     if not df_ls:
             raise ValueError(f"No files contained '{ID_VAR}' — check column name")
 
-    from functools import reduce
     merged = reduce(lambda l, r: pd.merge(l, r, on=ID_VAR, how='outer'), df_ls)
 
     logger.info(f"Merged shape: {merged.shape}")
