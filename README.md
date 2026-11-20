@@ -1,6 +1,10 @@
 # Statistical & ML Analysis Toolkit
 
-A Streamlit app for end-to-end statistical and machine learning analysis of tabular data. Upload a dataset, pick variables and settings in the sidebar, and every analysis renders in the browser with a download button — no scripting, no config editing, no files placed on the server.
+A Streamlit app for end-to-end statistical and machine learning analysis of tabular data. Upload a dataset, pick variables and settings in the sidebar, and every analysis renders in the browser with a download button — no scripting, no config editing, no files placed on the server. 
+
+> [!WARNING]
+> **Do not upload confidential or identifiable data to the hosted version.**
+> The public demo runs on Streamlit Community Cloud, a third-party server. Uploaded files and generated outputs are processed and temporarily stored there. For PHI, IRB-protected, or otherwise sensitive data, clone the repo and run it locally (see [Getting Started Locally](#getting-started-locally)).
 
 Developed by Liam Sweeney.
 <p>
